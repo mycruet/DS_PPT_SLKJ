@@ -1,0 +1,3124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PPT设计工具 · 三合一 + 内容页六合一</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@3.12.0/dist/pptxgen.bundle.js">
+    </script>
+    <style>
+        /* ===== 全局重置 & 布局 ===== */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 20px 16px;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ===== 顶层导航 ===== */
+        .app-nav {
+            width: 100%;
+            max-width: 1320px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .app-nav-btn {
+            background: #2a2a2a;
+            color: #aaa;
+            border: 2px solid #444;
+            padding: 10px 32px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            letter-spacing: 1px;
+        }
+        .app-nav-btn:hover {
+            background: #333;
+            color: #ddd;
+        }
+        .app-nav-btn.active {
+            background: #00B0F0;
+            color: #fff;
+            border-color: #00B0F0;
+            box-shadow: 0 4px 20px rgba(0, 176, 240, 0.3);
+        }
+
+        /* ===== 工具容器 ===== */
+        .tool-container {
+            display: none;
+            width: 100%;
+            max-width: 1320px;
+            flex-direction: column;
+            align-items: center;
+        }
+        .tool-container.active {
+            display: flex;
+        }
+
+        /* ============================================================
+           工具1：三合一 (原7.html)  命名空间 #tool-triple
+           ============================================================ */
+        #tool-triple .control-panel {
+            width: 100%;
+            max-width: 1320px;
+            background: #2a2a2a;
+            padding: 18px 24px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 16px 28px;
+        }
+        #tool-triple .ctrl-group {
+            display: flex;
+            align-items: center;
+            gap: 8px 14px;
+            flex-wrap: wrap;
+        }
+        #tool-triple .ctrl-group label {
+            font-size: 14px;
+            color: #ccc;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        #tool-triple .ctrl-group input[type="file"] {
+            padding: 4px 10px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            max-width: 150px;
+        }
+        #tool-triple .ctrl-group input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+            background: transparent;
+        }
+        #tool-triple .opacity-val {
+            min-width: 38px;
+            text-align: center;
+            font-size: 14px;
+            color: #00B0F0;
+            font-weight: 600;
+        }
+        #tool-triple .opts {
+            display: flex;
+            gap: 6px;
+        }
+        #tool-triple .opts button {
+            background: #444;
+            color: #ddd;
+            border: 1px solid #666;
+            padding: 4px 14px;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        #tool-triple .opts button:hover {
+            background: #555;
+        }
+        #tool-triple .opts button.active {
+            background: #00B0F0;
+            border-color: #00B0F0;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(0, 176, 240, 0.3);
+        }
+        #tool-triple .tab-group {
+            display: flex;
+            gap: 4px;
+            background: #3a3a3a;
+            border-radius: 26px;
+            padding: 4px;
+        }
+        #tool-triple .tab-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            padding: 6px 22px;
+            border-radius: 22px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        #tool-triple .tab-btn:hover {
+            color: #fff;
+        }
+        #tool-triple .tab-btn.active {
+            background: #00B0F0;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(0, 176, 240, 0.35);
+        }
+        #tool-triple .ctrl-select {
+            padding: 6px 14px;
+            border-radius: 8px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #tool-triple .ctrl-select:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        #tool-triple #dimToggle {
+            background: transparent;
+            border: 1px solid #666;
+            color: #ccc;
+            padding: 5px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        #tool-triple #dimToggle:hover {
+            background: #3a3a3a;
+            border-color: #888;
+        }
+        #tool-triple #dimToggle.hidden {
+            display: none;
+        }
+        #tool-triple .download-btn {
+            background: #00B0F0;
+            color: #fff;
+            border: none;
+            padding: 8px 30px;
+            border-radius: 26px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 18px rgba(0, 176, 240, 0.3);
+            white-space: nowrap;
+        }
+        #tool-triple .download-btn:hover {
+            background: #0090c0;
+            transform: scale(1.02);
+        }
+        #tool-triple .download-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #tool-triple .slides-wrapper {
+            position: relative;
+            width: 1280px;
+            max-width: 100%;
+            aspect-ratio: 16 / 9;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
+            border-radius: 6px;
+            overflow: hidden;
+            background: #F4F8FD;
+        }
+        #tool-triple .slide-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: opacity 0.35s ease;
+            opacity: 0;
+            pointer-events: none;
+            background: #F4F8FD;
+        }
+        #tool-triple .slide-page.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #tool-triple .bg-layer {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 60px - 55px);
+            background: transparent center/cover no-repeat;
+            opacity: 0.35;
+            z-index: 0;
+            transition: opacity 0.15s ease;
+            pointer-events: none;
+        }
+        #tool-triple .header {
+            height: 60px;
+            background: #0A1A3A;
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 18px;
+            z-index: 1;
+            flex-shrink: 0;
+            position: relative;
+        }
+        #tool-triple .header[contenteditable="true"] {
+            outline: none;
+            cursor: text;
+        }
+        #tool-triple .header[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(255, 255, 255, 0.3);
+        }
+        #tool-triple .footer {
+            height: 55px;
+            background: #0A1A3A;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 40px;
+            color: #fff;
+            font-size: 16px;
+            gap: 8px;
+            z-index: 1;
+            flex-shrink: 0;
+            position: relative;
+        }
+        #tool-triple .footer[contenteditable="true"] {
+            outline: none;
+            cursor: text;
+        }
+        #tool-triple .footer[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(255, 255, 255, 0.3);
+        }
+        #tool-triple .cover-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 30px 20px;
+            text-align: center;
+        }
+        #tool-triple .cover-content .dots-wrap {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        #tool-triple .cover-content .dot {
+            width: 8px;
+            height: 8px;
+            background: #00B0F0;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        #tool-triple .cover-content .dot.m {
+            width: 12px;
+            height: 12px;
+        }
+        #tool-triple .main-title {
+            font-size: clamp(36px, 4.8vw, 54px);
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 4px 8px;
+        }
+        #tool-triple .main-title .p {
+            color: #0D233A;
+            cursor: text;
+        }
+        #tool-triple .main-title .c {
+            background: linear-gradient(135deg, #00B0F0, #0A1A3A);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: text;
+        }
+        #tool-triple .main-title .s {
+            background: linear-gradient(135deg, #FFD700, #E67E22);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: text;
+        }
+        #tool-triple .main-title span[contenteditable="true"] {
+            outline: none;
+        }
+        #tool-triple .main-title span[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 0, 0, 0.15);
+        }
+        #tool-triple .sub-title {
+            color: #34495E;
+            font-size: clamp(18px, 2.2vw, 26px);
+            font-weight: 500;
+            letter-spacing: 2px;
+            margin-bottom: 28px;
+            cursor: text;
+        }
+        #tool-triple .sub-title[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 0, 0, 0.12);
+        }
+        #tool-triple .tags {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        #tool-triple .tag {
+            border: 1px solid #00B0F0;
+            background: rgba(0, 176, 240, 0.05);
+            color: #0D233A;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: text;
+            min-width: 60px;
+            transition: width 0.1s, height 0.1s;
+            white-space: nowrap;
+        }
+        #tool-triple .tag[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 176, 240, 0.4);
+        }
+        #tool-triple #dimArea {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        #tool-triple #dimArea .dim-line-top {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            border-top: 2px dashed rgba(255, 80, 80, 0.6);
+        }
+        #tool-triple #dimArea .dim-line-bottom {
+            position: absolute;
+            bottom: 55px;
+            left: 0;
+            width: 100%;
+            border-top: 2px dashed rgba(255, 80, 80, 0.6);
+        }
+        #tool-triple #dimArea .dim-label {
+            color: #ff4d4d;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 2px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            white-space: nowrap;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #tool-triple #dimArea .dim-label-top {
+            top: 72px;
+        }
+        #tool-triple #dimArea .dim-label-bottom {
+            bottom: 32px;
+        }
+        #tool-triple .toc-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 30px 10px;
+        }
+        #tool-triple .toc-title-wrapper {
+            font-size: 42px;
+            font-weight: bold;
+            color: #0D233A;
+            margin-top: 6px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            letter-spacing: 3px;
+        }
+        #tool-triple .toc-title-wrapper .sub-title-toc {
+            font-size: 18px;
+            font-weight: normal;
+            color: #6B7A8F;
+            letter-spacing: 10px;
+            margin-top: 5px;
+        }
+        #tool-triple .toc-title-wrapper[contenteditable="true"] {
+            outline: none;
+        }
+        #tool-triple .toc-title-wrapper[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 0, 0, 0.12);
+        }
+        #tool-triple .toc-title-wrapper .sub-title-toc[contenteditable="true"] {
+            outline: none;
+        }
+        #tool-triple .toc-title-wrapper .sub-title-toc[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 0, 0, 0.10);
+        }
+        #tool-triple .toc-container {
+            width: 70%;
+            flex: 1;
+            min-height: 0;
+            margin-top: 8px;
+            margin-bottom: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+        #tool-triple .toc-container.double-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-content: space-evenly;
+            justify-items: center;
+            gap: 10px 80px;
+        }
+        #tool-triple .toc-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            max-width: 550px;
+            font-size: 32px;
+            cursor: text;
+            padding: 4px 0;
+        }
+        #tool-triple .toc-item .toc-number {
+            font-weight: bold;
+            color: #00B0F0;
+            width: 80px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        #tool-triple .toc-item .toc-text {
+            color: #0D233A;
+            margin-left: 60px;
+            flex: 1;
+            outline: none;
+        }
+        #tool-triple .toc-item .toc-text[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 0, 0, 0.10);
+        }
+        #tool-triple .end-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px 40px;
+            text-align: center;
+        }
+        #tool-triple .end-title {
+            font-size: clamp(36px, 4.8vw, 54px);
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+        #tool-triple .end-title .dark {
+            color: #0D233A;
+            cursor: text;
+        }
+        #tool-triple .end-title .light {
+            color: #00B0F0;
+            cursor: text;
+        }
+        #tool-triple .end-title span[contenteditable="true"] {
+            outline: none;
+        }
+        #tool-triple .end-title span[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 0, 0, 0.12);
+        }
+        #tool-triple .end-sub {
+            color: #6B7A8F;
+            font-size: clamp(18px, 2vw, 24px);
+            letter-spacing: 2px;
+            margin-top: 2px;
+            cursor: text;
+        }
+        #tool-triple .end-sub[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 0, 0, 0.12);
+        }
+        #tool-triple .end-contact {
+            margin-top: 28px;
+            display: flex;
+            gap: 30px 50px;
+            flex-wrap: wrap;
+            justify-content: center;
+            color: #0D233A;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+        #tool-triple .end-contact span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: text;
+        }
+        #tool-triple .end-contact span[contenteditable="true"] {
+            outline: none;
+        }
+        #tool-triple .end-contact span[contenteditable="true"]:focus {
+            outline: 1px dashed rgba(0, 0, 0, 0.10);
+        }
+        #tool-triple .end-contact .icon {
+            color: #00B0F0;
+            font-weight: 700;
+            user-select: none;
+        }
+        @media (max-width: 900px) {
+            #tool-triple .control-panel {
+                padding: 14px 16px;
+                gap: 12px;
+            }
+            #tool-triple .ctrl-group {
+                gap: 6px 10px;
+            }
+            #tool-triple .ctrl-group input[type="file"] {
+                max-width: 120px;
+                font-size: 12px;
+            }
+            #tool-triple .ctrl-group input[type="range"] {
+                width: 100px;
+            }
+            #tool-triple .tab-btn {
+                padding: 4px 14px;
+                font-size: 13px;
+            }
+            #tool-triple .download-btn {
+                padding: 6px 20px;
+                font-size: 14px;
+            }
+            #tool-triple .main-title,
+            #tool-triple .end-title {
+                font-size: clamp(28px, 4vw, 38px);
+            }
+            #tool-triple .sub-title,
+            #tool-triple .end-sub {
+                font-size: clamp(15px, 1.8vw, 20px);
+            }
+            #tool-triple .tag {
+                font-size: 13px;
+                padding: 5px 12px;
+            }
+            #tool-triple .header {
+                font-size: 15px;
+                padding: 0 20px;
+            }
+            #tool-triple .footer {
+                font-size: 13px;
+                padding: 0 20px;
+            }
+            #tool-triple .end-contact {
+                font-size: 15px;
+                gap: 16px 28px;
+            }
+            #tool-triple .toc-title-wrapper {
+                font-size: 32px;
+            }
+            #tool-triple .toc-title-wrapper .sub-title-toc {
+                font-size: 15px;
+                letter-spacing: 6px;
+            }
+            #tool-triple .toc-item {
+                font-size: 24px;
+            }
+            #tool-triple .toc-item .toc-number {
+                width: 60px;
+            }
+            #tool-triple .toc-item .toc-text {
+                margin-left: 40px;
+            }
+            #tool-triple .toc-container {
+                width: 80%;
+            }
+            #tool-triple .toc-container.double-column {
+                gap: 8px 40px;
+            }
+        }
+        @media (max-width: 600px) {
+            #tool-triple .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            #tool-triple .ctrl-group {
+                justify-content: center;
+            }
+            #tool-triple .ctrl-group input[type="range"] {
+                width: 120px;
+            }
+            #tool-triple .slides-wrapper {
+                border-radius: 4px;
+            }
+            #tool-triple .header,
+            #tool-triple .footer {
+                padding: 0 14px;
+                font-size: 12px;
+            }
+            #tool-triple .header {
+                height: 44px;
+            }
+            #tool-triple .footer {
+                height: 40px;
+            }
+            #tool-triple .bg-layer {
+                top: 44px;
+                height: calc(100% - 44px - 40px);
+            }
+            #tool-triple #dimArea .dim-line-top {
+                top: 44px;
+            }
+            #tool-triple #dimArea .dim-line-bottom {
+                bottom: 40px;
+            }
+            #tool-triple #dimArea .dim-label-top {
+                top: 54px;
+                font-size: 10px;
+                padding: 1px 8px;
+            }
+            #tool-triple #dimArea .dim-label-bottom {
+                bottom: 22px;
+                font-size: 10px;
+                padding: 1px 8px;
+            }
+            #tool-triple .cover-content .dots-wrap {
+                margin-bottom: 6px;
+            }
+            #tool-triple .cover-content .dot {
+                width: 5px;
+                height: 5px;
+            }
+            #tool-triple .cover-content .dot.m {
+                width: 8px;
+                height: 8px;
+            }
+            #tool-triple .main-title,
+            #tool-triple .end-title {
+                font-size: clamp(22px, 5vw, 30px);
+                letter-spacing: 1px;
+            }
+            #tool-triple .sub-title,
+            #tool-triple .end-sub {
+                font-size: clamp(13px, 2.2vw, 17px);
+                margin-bottom: 12px;
+            }
+            #tool-triple .tags {
+                gap: 6px;
+            }
+            #tool-triple .tag {
+                font-size: 11px;
+                padding: 4px 10px;
+                border-radius: 14px;
+            }
+            #tool-triple .end-contact {
+                font-size: 13px;
+                gap: 10px 16px;
+                margin-top: 14px;
+                flex-direction: column;
+                align-items: center;
+            }
+            #tool-triple .end-content {
+                padding: 10px 16px;
+            }
+            #tool-triple .cover-content {
+                padding: 6px 16px 10px;
+            }
+            #tool-triple .toc-title-wrapper {
+                font-size: 24px;
+            }
+            #tool-triple .toc-title-wrapper .sub-title-toc {
+                font-size: 12px;
+                letter-spacing: 4px;
+            }
+            #tool-triple .toc-item {
+                font-size: 18px;
+            }
+            #tool-triple .toc-item .toc-number {
+                width: 44px;
+            }
+            #tool-triple .toc-item .toc-text {
+                margin-left: 28px;
+            }
+            #tool-triple .toc-container {
+                width: 90%;
+            }
+            #tool-triple .toc-container.double-column {
+                gap: 4px 20px;
+            }
+            #tool-triple .toc-content {
+                padding: 4px 12px 4px;
+            }
+        }
+
+        /* ============================================================
+           工具2：内容页六合一 (原1-6.html)  命名空间 #tool-content
+           ============================================================ */
+        #tool-content .tab-nav {
+            width: 95%;
+            max-width: 1100px;
+            display: flex;
+            gap: 6px;
+            margin: 0 0 0 0;
+        }
+        #tool-content .tab-btn {
+            flex: 1;
+            padding: 10px 0;
+            background: #2a2a2a;
+            color: #aaa;
+            border: 2px solid #444;
+            border-radius: 10px 10px 0 0;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s, border-color 0.18s;
+        }
+        #tool-content .tab-btn:hover {
+            background: #333;
+            color: #ddd;
+        }
+        #tool-content .tab-btn.active {
+            background: #00B0F0;
+            color: #fff;
+            border-color: #00B0F0;
+        }
+        #tool-content .tab-panel {
+            display: none;
+            width: 100%;
+            align-items: center;
+            flex-direction: column;
+        }
+        #tool-content .tab-panel.active {
+            display: flex;
+        }
+        #tool-content .control-panel {
+            width: 95%;
+            max-width: 1100px;
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 0 0 12px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+        #tool-content .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            min-width: 60px;
+        }
+        #tool-content .control-group label {
+            font-size: 12px;
+            color: #ccc;
+            cursor: pointer;
+        }
+        #tool-content .control-group input[type="number"],
+        #tool-content .control-group input[type="color"],
+        #tool-content .control-group select {
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            width: 60px;
+            font-size: 14px;
+        }
+        #tool-content .control-group input[type="color"] {
+            width: 40px;
+            height: 30px;
+            padding: 2px;
+            cursor: pointer;
+        }
+        #tool-content .control-group input[type="file"] {
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            font-size: 13px;
+            cursor: pointer;
+            width: auto;
+        }
+        #tool-content .download-btn {
+            background: #00B0F0;
+            color: #fff;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        #tool-content .download-btn:hover {
+            background: #0090c0;
+        }
+        #tool-content .download-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        #tool-content .info-panel {
+            width: 95%;
+            max-width: 1100px;
+            background: #2a2a2a;
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            font-size: 13px;
+            color: #aaa;
+            border: 1px solid #444;
+        }
+        #tool-content .info-panel span {
+            color: #00B0F0;
+            font-weight: bold;
+        }
+        #tool-content .slide-container {
+            width: 1280px;
+            height: 720px;
+            background: #F4F8FD;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            margin-bottom: 30px;
+        }
+        #tool-content .content-page {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            padding: 30px 70px 25px 70px;
+            display: flex;
+            flex-direction: column;
+        }
+        #tool-content .title-bar-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 25px;
+        }
+        #tool-content .left-title-group {
+            display: flex;
+            align-items: baseline;
+            gap: 20px;
+            color: #0D233A;
+        }
+        #tool-content .title-bar-wrapper .number {
+            font-weight: bold;
+            color: #00B0F0;
+            cursor: text;
+        }
+        #tool-content .title-bar-wrapper .main-title {
+            font-weight: bold;
+            color: #0D233A;
+            cursor: text;
+        }
+        #tool-content .title-bar-wrapper .sub-title {
+            color: #6B7A8F;
+            text-align: right;
+            cursor: text;
+        }
+        #tool-content .divider-line {
+            width: 100%;
+            height: 2px;
+            background: #dce6f0;
+            margin-bottom: 25px;
+        }
+        #tool-content .overview-wrapper {
+            margin-bottom: 25px;
+            cursor: text;
+            outline: none;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        #tool-content .overview-wrapper p,
+        #tool-content .overview-wrapper div {
+            margin: 0 0 10px 0;
+            padding: 0;
+        }
+        #tool-content .overview-wrapper p:last-child,
+        #tool-content .overview-wrapper div:last-child {
+            margin-bottom: 0;
+        }
+        #tool-content .overview-wrapper p {
+            color: #0D233A;
+        }
+
+        /* 布局一 */
+        #tool-content #layout1 .split-layout {
+            flex-grow: 1;
+            display: flex;
+            gap: 40px;
+            min-height: 100px;
+        }
+        #tool-content #layout1 .column-image {
+            display: flex;
+            flex-direction: column;
+        }
+        #tool-content #layout1 .image-wrapper {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            background: #EAF2FC;
+            border: 1px dashed #a4c2f4;
+            position: relative;
+            overflow: hidden;
+        }
+        #tool-content #layout1 .image-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: none;
+        }
+        #tool-content #layout1 .image-wrapper .placeholder-tip {
+            color: #6B7A8F;
+            font-size: 16px;
+            user-select: none;
+        }
+        #tool-content #layout1 .image-caption {
+            width: 100%;
+            text-align: center;
+            color: #6B7A8F;
+            font-size: 16px;
+            padding-top: 15px;
+            cursor: text;
+        }
+        #tool-content #layout1 .column-detail {
+            display: flex;
+            flex-direction: column;
+        }
+        #tool-content #layout1 .detail-item {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        #tool-content #layout1 .detail-header {
+            display: flex;
+            align-items: baseline;
+            gap: 20px;
+            color: #0D233A;
+            width: 100%;
+        }
+        #tool-content #layout1 .detail-header .d-number {
+            font-weight: bold;
+            color: #00B0F0;
+            cursor: text;
+        }
+        #tool-content #layout1 .detail-header .d-title {
+            font-weight: bold;
+            cursor: text;
+        }
+        #tool-content #layout1 .detail-body {
+            width: 100%;
+            text-align: left;
+            color: #6B7A8F;
+            line-height: 1.6;
+            cursor: text;
+            margin-top: 5px;
+        }
+
+        /* 布局二 - 多图组并排，间距紧凑 */
+        #tool-content #layout2 .group-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            /* 紧凑间距 10px */
+            align-items: stretch;
+            justify-content: center;
+            width: 100%;
+        }
+        #tool-content #layout2 .group-container.columns-2 .content-group {
+            width: calc(50% - 5px);
+            flex: 0 0 calc(50% - 5px);
+        }
+        #tool-content #layout2 .group-container.columns-3 .content-group {
+            width: calc(33.333% - 6.667px);
+            flex: 0 0 calc(33.333% - 6.667px);
+        }
+        #tool-content #layout2 .content-group {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            height: 100%;
+        }
+        #tool-content #layout2 .image-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #tool-content #layout2 .image-wrapper {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            background: #EAF2FC;
+            border: 1px dashed #a4c2f4;
+            position: relative;
+            overflow: hidden;
+        }
+        #tool-content #layout2 .image-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: none;
+        }
+        #tool-content #layout2 .image-wrapper .placeholder-tip {
+            color: #6B7A8F;
+            font-size: 15px;
+            user-select: none;
+        }
+        #tool-content #layout2 .image-caption {
+            width: 100%;
+            text-align: center;
+            color: #6B7A8F;
+            font-size: 15px;
+            padding-top: 12px;
+            cursor: text;
+            flex-shrink: 0;
+        }
+        #tool-content #layout2 .explanation-group {
+            margin-top: 10px;
+            /* 紧凑间距 10px */
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        #tool-content #layout2 .explanation-title {
+            font-weight: bold;
+            color: #0D233A;
+            cursor: text;
+        }
+        #tool-content #layout2 .explanation-body {
+            color: #0D233A;
+            cursor: text;
+            outline: none;
+            min-height: 1.5em;
+            line-height: 1.6;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        #tool-content #layout2 .explanation-body p {
+            margin: 0;
+        }
+
+        /* 布局三 */
+        #tool-content #layout3 .image-group {
+            display: flex;
+            flex-direction: column;
+        }
+        #tool-content #layout3 .image-wrapper {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            background: #EAF2FC;
+            border: 1px dashed #a4c2f4;
+            position: relative;
+            overflow: hidden;
+        }
+        #tool-content #layout3 .image-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: none;
+        }
+        #tool-content #layout3 .image-wrapper .placeholder-tip {
+            color: #6B7A8F;
+            font-size: 16px;
+            user-select: none;
+        }
+        #tool-content #layout3 .image-caption {
+            width: 100%;
+            text-align: center;
+            color: #6B7A8F;
+            font-size: 16px;
+            padding-top: 15px;
+            cursor: text;
+            flex-shrink: 0;
+        }
+        #tool-content #layout3 .explanation-text {
+            margin-top: 25px;
+            cursor: text;
+            outline: none;
+            color: #0D233A;
+            flex-shrink: 0;
+        }
+        #tool-content #layout3 .explanation-text p {
+            margin: 0 0 10px 0;
+        }
+
+        /* 布局四 */
+        #tool-content #layout4 .image-group {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #tool-content #layout4 .image-wrapper {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            background: #EAF2FC;
+            border: 1px dashed #a4c2f4;
+            position: relative;
+            overflow: hidden;
+        }
+        #tool-content #layout4 .image-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: none;
+        }
+        #tool-content #layout4 .image-wrapper .placeholder-tip {
+            color: #6B7A8F;
+            font-size: 16px;
+            user-select: none;
+        }
+        #tool-content #layout4 .image-caption {
+            width: 100%;
+            text-align: center;
+            color: #6B7A8F;
+            font-size: 16px;
+            padding-top: 15px;
+            cursor: text;
+        }
+
+        /* 布局五 */
+        #tool-content #layout5 .detail-wrapper {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        #tool-content #layout5 .card-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 20px;
+            box-sizing: border-box;
+            padding: 10px 0;
+        }
+        #tool-content #layout5 .card-container.layout-horizontal {
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: stretch;
+        }
+        #tool-content #layout5 .card-container.layout-grid {
+            display: grid;
+            gap: 20px;
+        }
+        #tool-content #layout5 .card-container.layout-vertical-grid {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        #tool-content #layout5 .card-item {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+            padding: 25px;
+            border: 1px solid #eaf0f6;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        #tool-content #layout5 .card-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            color: #0D233A;
+        }
+        #tool-content #layout5 .card-header .c-number {
+            font-weight: bold;
+            color: #00B0F0;
+            cursor: text;
+        }
+        #tool-content #layout5 .card-header .c-title {
+            font-weight: bold;
+            cursor: text;
+        }
+        #tool-content #layout5 .card-body {
+            width: 100%;
+            text-align: left;
+            color: #6B7A8F;
+            cursor: text;
+        }
+
+        /* 布局六 */
+        #tool-content #slide6 {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #tool-content #l6_bgLayer {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: 605px;
+            background: transparent center/cover no-repeat;
+            opacity: 0.35;
+            z-index: 0;
+            transition: opacity 0.1s ease;
+        }
+        #tool-content #layout6 .l6-header {
+            height: 60px;
+            background: #0A1A3A;
+            display: flex;
+            align-items: center;
+            padding: 0 50px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 1;
+        }
+        #tool-content #layout6 .l6-footer {
+            height: 55px;
+            background: #0A1A3A;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 50px;
+            color: #fff;
+            font-size: 16px;
+            gap: 6px;
+            z-index: 1;
+        }
+        #tool-content #layout6 .content-chapter {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            position: relative;
+        }
+        #tool-content #layout6 .chapter-number {
+            font-size: 72px;
+            font-weight: bold;
+            color: #00B0F0;
+            letter-spacing: 2px;
+            cursor: text;
+            line-height: 1;
+            text-shadow: 0 4px 15px rgba(0, 176, 240, 0.2);
+        }
+        #tool-content #layout6 .chapter-title {
+            font-size: 54px;
+            font-weight: bold;
+            color: #0D233A;
+            margin-top: 25px;
+            letter-spacing: 3px;
+            text-align: center;
+            cursor: text;
+        }
+        #tool-content #layout6 .chapter-subtitle {
+            font-size: 24px;
+            color: #6B7A8F;
+            margin-top: 15px;
+            letter-spacing: 2px;
+            text-align: center;
+            cursor: text;
+        }
+        #tool-content .opacity-options {
+            display: flex;
+            gap: 10px;
+        }
+        #tool-content .opacity-btn {
+            background: #444;
+            color: #fff;
+            border: 1px solid #666;
+            padding: 5px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        #tool-content .opacity-btn:hover {
+            background: #555;
+        }
+        #tool-content .opacity-btn.active {
+            background: #00B0F0;
+            border-color: #00B0F0;
+            box-shadow: 0 0 10px rgba(0, 176, 240, 0.3);
+        }
+
+        /* 响应式微调 工具2 */
+        @media (max-width: 900px) {
+            #tool-content .slide-container {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 16/9;
+            }
+            #tool-content .content-page {
+                padding: 20px 30px 15px 30px;
+            }
+            #tool-content .title-bar-wrapper .number {
+                font-size: 24px !important;
+            }
+            #tool-content .title-bar-wrapper .main-title {
+                font-size: 24px !important;
+            }
+            #tool-content .title-bar-wrapper .sub-title {
+                font-size: 16px !important;
+            }
+            #tool-content #layout1 .split-layout {
+                flex-direction: column;
+                gap: 20px;
+            }
+            #tool-content #layout1 .column-image {
+                flex: 1 1 auto;
+            }
+            #tool-content #layout1 .column-detail {
+                flex: 1 1 auto;
+            }
+            #tool-content #layout2 .group-container.columns-2 .content-group,
+            #tool-content #layout2 .group-container.columns-3 .content-group {
+                width: 100%;
+                flex: 1 1 auto;
+            }
+            #tool-content #layout2 .group-container {
+                flex-wrap: wrap;
+                gap: 14px;
+            }
+            #tool-content #layout2 .explanation-group {
+                margin-top: 8px;
+            }
+            #tool-content #layout5 .card-container.layout-horizontal {
+                flex-wrap: wrap;
+            }
+            #tool-content #layout5 .card-item {
+                flex: 1 1 45%;
+                min-width: 200px;
+            }
+            #tool-content #layout6 .chapter-number {
+                font-size: 48px;
+            }
+            #tool-content #layout6 .chapter-title {
+                font-size: 32px;
+            }
+            #tool-content #layout6 .chapter-subtitle {
+                font-size: 18px;
+            }
+            #tool-content #layout6 .l6-header {
+                font-size: 14px;
+                padding: 0 20px;
+                height: 44px;
+            }
+            #tool-content #layout6 .l6-footer {
+                font-size: 12px;
+                padding: 0 20px;
+                height: 40px;
+            }
+            #tool-content #l6_bgLayer {
+                top: 44px;
+                height: calc(100% - 44px - 40px);
+            }
+        }
+        @media (max-width: 600px) {
+            #tool-content .content-page {
+                padding: 12px 14px 10px 14px;
+            }
+            #tool-content .title-bar-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+                margin-bottom: 14px;
+            }
+            #tool-content .title-bar-wrapper .sub-title {
+                text-align: left;
+            }
+            #tool-content .left-title-group {
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            #tool-content .overview-wrapper {
+                margin-bottom: 14px;
+                font-size: 14px !important;
+            }
+            #tool-content .divider-line {
+                margin-bottom: 14px;
+            }
+            #tool-content #layout1 .split-layout {
+                gap: 14px;
+            }
+            #tool-content #layout1 .detail-header {
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            #tool-content #layout1 .detail-body {
+                font-size: 14px !important;
+            }
+            #tool-content #layout2 .group-container {
+                gap: 12px;
+            }
+            #tool-content #layout2 .content-group {
+                width: 100% !important;
+                flex: 1 1 100% !important;
+            }
+            #tool-content #layout2 .explanation-title {
+                font-size: 16px !important;
+            }
+            #tool-content #layout2 .explanation-body {
+                font-size: 13px !important;
+            }
+            #tool-content #layout3 .explanation-text {
+                font-size: 14px !important;
+                margin-top: 14px;
+            }
+            #tool-content #layout5 .card-item {
+                flex: 1 1 100%;
+                min-width: unset;
+                padding: 16px;
+            }
+            #tool-content #layout5 .card-header {
+                font-size: 18px !important;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            #tool-content #layout5 .card-body {
+                font-size: 14px !important;
+            }
+            #tool-content #layout6 .chapter-number {
+                font-size: 36px;
+            }
+            #tool-content #layout6 .chapter-title {
+                font-size: 24px;
+                margin-top: 12px;
+            }
+            #tool-content #layout6 .chapter-subtitle {
+                font-size: 14px;
+                margin-top: 8px;
+            }
+            #tool-content .control-panel {
+                padding: 10px;
+                gap: 10px;
+            }
+            #tool-content .control-group {
+                min-width: 50px;
+            }
+            #tool-content .tab-btn {
+                font-size: 12px;
+                padding: 6px 4px;
+            }
+            #tool-content .tab-nav {
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+    顶层导航
+    ============================================================ -->
+    <div class="app-nav">
+        <button class="app-nav-btn active" data-tool="triple">📄 三合一工具 · 封面/目录/结束页</button>
+        <button class="app-nav-btn" data-tool="content">📋 内容页六合一工具</button>
+    </div>
+
+    <!-- ============================================================
+    工具1：三合一
+    ============================================================ -->
+    <div class="tool-container active" id="tool-triple">
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="ctrl-group">
+                <div class="tab-group">
+                    <button class="tab-btn active" data-tab="cover">📄 封面页</button>
+                    <button class="tab-btn" data-tab="toc">📋 目录页</button>
+                    <button class="tab-btn" data-tab="end">🔚 结束页</button>
+                </div>
+            </div>
+            <div class="ctrl-group">
+                <label id="bgLabel">🖼️ 背景图</label>
+                <input type="file" id="bgUpload" accept="image/*" />
+            </div>
+            <div class="ctrl-group">
+                <label>🎨 透明度</label>
+                <input type="range" id="opacitySlider" min="0" max="100" value="35" />
+                <span class="opacity-val" id="opacityVal">35%</span>
+                <div class="opts">
+                    <button data-op="0.20">20%</button>
+                    <button data-op="0.35" class="active">35%</button>
+                    <button data-op="0.50">50%</button>
+                </div>
+            </div>
+            <div class="ctrl-group" id="tocCountGroup">
+                <label>📄 条目数</label>
+                <select class="ctrl-select" id="itemCountSelector">
+                    <option value="3">3 条</option>
+                    <option value="4">4 条</option>
+                    <option value="5">5 条</option>
+                    <option value="6" selected>6 条</option>
+                    <option value="7">7 条</option>
+                    <option value="8">8 条</option>
+                </select>
+            </div>
+            <div class="ctrl-group">
+                <button id="dimToggle">☑ 隐藏尺寸线</button>
+            </div>
+            <div class="ctrl-group">
+                <button class="download-btn" id="downloadBtnTriple">⬇️ 生成三页PPTX</button>
+            </div>
+        </div>
+
+        <!-- 幻灯片 -->
+        <div class="slides-wrapper" id="slidesWrapper">
+            <!-- 封面 -->
+            <div class="slide-page active" id="pageCover">
+                <div class="bg-layer" id="bgCover"></div>
+                <div id="dimArea">
+                    <div class="dim-line-top"></div>
+                    <div class="dim-label dim-label-top">内容栏起始：60px</div>
+                    <div class="dim-line-bottom"></div>
+                    <div class="dim-label dim-label-bottom">高 605px · 宽 1280px (16:9)</div>
+                </div>
+                <div class="header" contenteditable="true">公司名称</div>
+                <div class="cover-content">
+                    <div class="dots-wrap">
+                        <span class="dot"></span><span class="dot m"></span><span class="dot"></span>
+                    </div>
+                    <div class="main-title">
+                        <span class="p" contenteditable="true">XX企业</span>
+                        <span class="c" contenteditable="true">工业物联网</span>
+                        <span class="s" contenteditable="true">数智化赋能解决方案</span>
+                    </div>
+                    <div class="sub-title" contenteditable="true">
+                        打造行业新标杆，实现全流程数字化管控，提效增质赋能决策
+                    </div>
+                    <div class="tags">
+                        <span class="tag" contenteditable="true">工业物联网</span>
+                        <span class="tag" contenteditable="true">3D数字孪生</span>
+                        <span class="tag" contenteditable="true">大数据分析</span>
+                        <span class="tag" contenteditable="true">人工智能</span>
+                    </div>
+                    <div class="dots-wrap" style="margin-top:32px;">
+                        <span class="dot"></span><span class="dot m"></span><span class="dot"></span>
+                    </div>
+                </div>
+                <div class="footer" contenteditable="true">
+                    <span>数据驱动</span> | <span>洞察问题</span> | <span>预测趋势</span> | <span>智能决策</span> | <span>科学管理</span>
+                </div>
+            </div>
+            <!-- 目录 -->
+            <div class="slide-page" id="pageToc">
+                <div class="bg-layer" id="bgToc"></div>
+                <div class="header" contenteditable="true">公司名称</div>
+                <div class="toc-content">
+                    <div class="toc-title-wrapper" contenteditable="true">
+                        <div>目录</div>
+                        <div class="sub-title-toc" contenteditable="true">CONTENTS</div>
+                    </div>
+                    <div class="toc-container" id="tocContainer"></div>
+                </div>
+                <div class="footer" contenteditable="true">
+                    <span>数据驱动</span> | <span>洞察问题</span> | <span>预测趋势</span> | <span>智能决策</span> | <span>科学管理</span>
+                </div>
+            </div>
+            <!-- 结束页 -->
+            <div class="slide-page" id="pageEnd">
+                <div class="bg-layer" id="bgEnd"></div>
+                <div class="header" contenteditable="true">公司名称</div>
+                <div class="end-content">
+                    <div class="end-title">
+                        <span class="dark" contenteditable="true">感谢聆听</span>
+                        <span class="light" contenteditable="true">，合作共赢</span>
+                    </div>
+                    <div class="end-sub" contenteditable="true">
+                        打造精益数字化管理，携手共建数智未来
+                    </div>
+                    <div class="end-contact">
+                        <span><span class="icon">📞</span> <span contenteditable="true">400-888-9999</span></span>
+                        <span><span class="icon">✉️</span> <span contenteditable="true">contact@technova.com</span></span>
+                    </div>
+                </div>
+                <div class="footer" contenteditable="true">
+                    <span>数据驱动</span> | <span>洞察问题</span> | <span>预测趋势</span> | <span>智能决策</span> | <span>科学管理</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    工具2：内容页六合一
+    ============================================================ -->
+    <div class="tool-container" id="tool-content">
+        <!-- 标签导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchContentTab(1)">📐 布局一：左图右文</button>
+            <button class="tab-btn" onclick="switchContentTab(2)">🖼️ 布局二：多图组并排</button>
+            <button class="tab-btn" onclick="switchContentTab(3)">📄 布局三：上文下图+解释</button>
+            <button class="tab-btn" onclick="switchContentTab(4)">🗂️ 布局四：上文下图</button>
+            <button class="tab-btn" onclick="switchContentTab(5)">🃏 布局五：卡片式</button>
+            <button class="tab-btn" onclick="switchContentTab(6)">📑 布局六：章节页</button>
+        </div>
+
+        <!-- ===== 布局一 ===== -->
+        <div class="tab-panel active" id="panel1">
+            <div class="control-panel">
+                <div class="control-group"><label>标题字号</label><input type="number" id="l1_titleSize" value="36" min="20" max="60" style="width:50px;"></div>
+                <div class="control-group"><label>概述字号</label><input type="number" id="l1_overviewSize" value="20" min="12" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>概述行距</label><input type="number" id="l1_overviewLineHeight" value="1.8" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>概述颜色</label><input type="color" id="l1_overviewColor" value="#0D233A" style="width:40px;"></div>
+                <div class="control-group"><label>图宽占比%</label><input type="number" id="l1_imageRatio" value="45" min="30" max="70" style="width:50px;"></div>
+                <div class="control-group"><label>条目条数</label>
+                    <select id="l1_detailCount" style="width:60px;">
+                        <option value="2">2</option><option value="3" selected>3</option>
+                        <option value="4">4</option><option value="5">5</option>
+                    </select>
+                </div>
+                <div class="control-group"><label>条目字号</label><input type="number" id="l1_detailSize" value="22" min="14" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>条目行距</label><input type="number" id="l1_detailLineHeight" value="1.8" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>条目正文颜色</label><input type="color" id="l1_detailColor" value="#6B7A8F" style="width:40px;"></div>
+                <div class="control-group"><label>高清大图</label><input type="file" id="l1_imageUpload" accept="image/*"></div>
+                <div class="control-group"><button class="download-btn" id="l1_downloadBtn" onclick="downloadContentPPTX(1)">⬇️ 生成PPTX</button></div>
+            </div>
+            <div class="info-panel">
+                <div>图片宽：<span id="l1_dispWidth">--</span> px</div>
+                <div>图片高：<span id="l1_dispHeight">--</span> px</div>
+                <div>弧度：<span id="l1_dispRadius">12px</span></div>
+            </div>
+            <div class="slide-container" id="slide1">
+                <div class="content-page" id="layout1">
+                    <div class="title-bar-wrapper">
+                        <div class="left-title-group">
+                            <span class="number" contenteditable="true">01</span>
+                            <span class="main-title" contenteditable="true">方案实施策略</span>
+                        </div>
+                        <span class="sub-title" contenteditable="true">核心推进路线与部署</span>
+                    </div>
+                    <div class="divider-line"></div>
+                    <div class="overview-wrapper" id="l1_overviewArea" contenteditable="true">
+                        <p>工业物联网平台的建设是一项系统性的工程。结合企业现有的信息化基础，我们制定了"分步实施、重点突破"的总体策略。</p>
+                        <p>通过对全流程数据的实时采集和深度解析，构建稳定的数据传输通道，以数字化赋能业务的决策和精细化管理。</p>
+                    </div>
+                    <div class="split-layout" id="l1_splitLayout">
+                        <div class="column-image" id="l1_columnImage">
+                            <div class="image-wrapper" id="l1_imageWrapper">
+                                <span class="placeholder-tip">点击上方【高清大图】上传</span>
+                                <img id="l1_uploadedImage" src="" alt="预览图">
+                            </div>
+                            <div class="image-caption" contenteditable="true">图：核心架构逻辑示意图</div>
+                        </div>
+                        <div class="column-detail" id="l1_columnDetail"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 布局二 ===== -->
+        <div class="tab-panel" id="panel2">
+            <div class="control-panel">
+                <div class="control-group"><label>标题字号</label><input type="number" id="l2_titleSize" value="36" min="20" max="60" style="width:50px;"></div>
+                <div class="control-group"><label>概述字号</label><input type="number" id="l2_overviewSize" value="20" min="12" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>概述行距</label><input type="number" id="l2_overviewLineHeight" value="1.8" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>概述颜色</label><input type="color" id="l2_overviewColor" value="#0D233A" style="width:40px;"></div>
+                <div class="control-group"><label>解释标题字号</label><input type="number" id="l2_expTitleSize" value="18" min="10" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>解释正文字号</label><input type="number" id="l2_expBodySize" value="14" min="10" max="40" style="width:50px;"></div>
+                <div class="control-group"><label>解释行距</label><input type="number" id="l2_explanationLineHeight" value="1.6" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>解释颜色</label><input type="color" id="l2_explanationColor" value="#0D233A" style="width:40px;"></div>
+                <div class="control-group">
+                    <label>内容组数量</label>
+                    <select id="l2_groupCount" style="width:70px;"><option value="2">2 组</option><option value="3">3 组</option></select>
+                </div>
+                <div class="control-group"><button class="download-btn" id="l2_downloadBtn" onclick="downloadContentPPTX(2)">⬇️ 生成PPTX</button></div>
+            </div>
+            <div class="info-panel">
+                <div>当前宽：<span id="l2_dispWidth">--</span> px</div>
+                <div>当前高：<span id="l2_dispHeight">--</span> px</div>
+                <div>弧度：<span id="l2_dispRadius">12px</span></div>
+            </div>
+            <div class="slide-container" id="slide2">
+                <div class="content-page" id="layout2">
+                    <div class="title-bar-wrapper">
+                        <div class="left-title-group">
+                            <span class="number" contenteditable="true">01</span>
+                            <span class="main-title" contenteditable="true">方案实施策略</span>
+                        </div>
+                        <span class="sub-title" contenteditable="true">核心推进路线与部署</span>
+                    </div>
+                    <div class="divider-line"></div>
+                    <div class="overview-wrapper" id="l2_overviewArea" contenteditable="true">
+                        <p>工业物联网平台的建设是一项系统性的工程，结合企业现有的信息化基础，我们制定了"分步实施、重点突破"的总体策略。</p>
+                    </div>
+                    <div class="group-container" id="l2_groupContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 布局三 ===== -->
+        <div class="tab-panel" id="panel3">
+            <div class="control-panel">
+                <div class="control-group"><label>标题字号</label><input type="number" id="l3_titleSize" value="36" min="20" max="60" style="width:50px;"></div>
+                <div class="control-group"><label>概述字号</label><input type="number" id="l3_overviewSize" value="20" min="12" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>概述行距</label><input type="number" id="l3_overviewLineHeight" value="1.8" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>概述颜色</label><input type="color" id="l3_overviewColor" value="#0D233A" style="width:40px;"></div>
+                <div class="control-group"><label>解释字号</label><input type="number" id="l3_explanationSize" value="18" min="12" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>解释行距</label><input type="number" id="l3_explanationLineHeight" value="1.6" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>解释颜色</label><input type="color" id="l3_explanationColor" value="#0D233A" style="width:40px;"></div>
+                <div class="control-group"><label>高清大图</label><input type="file" id="l3_imageUpload" accept="image/*"></div>
+                <div class="control-group"><button class="download-btn" id="l3_downloadBtn" onclick="downloadContentPPTX(3)">⬇️ 生成PPTX</button></div>
+            </div>
+            <div class="info-panel">
+                <div>当前宽：<span id="l3_dispWidth">--</span> px</div>
+                <div>当前高：<span id="l3_dispHeight">--</span> px</div>
+                <div>弧度：<span id="l3_dispRadius">12px</span></div>
+            </div>
+            <div class="slide-container" id="slide3">
+                <div class="content-page" id="layout3">
+                    <div class="title-bar-wrapper">
+                        <div class="left-title-group">
+                            <span class="number" contenteditable="true">01</span>
+                            <span class="main-title" contenteditable="true">方案实施策略</span>
+                        </div>
+                        <span class="sub-title" contenteditable="true">核心推进路线与部署</span>
+                    </div>
+                    <div class="divider-line"></div>
+                    <div class="overview-wrapper" id="l3_overviewArea" contenteditable="true">
+                        <p>工业物联网平台的建设是一项系统性的工程。结合企业现有的信息化基础，我们制定了"分步实施、重点突破"的总体策略。</p>
+                        <p>通过对全流程数据的实时采集和深度解析，构建稳定的数据传输通道，以数字化赋能业务的决策和精细化管理。</p>
+                    </div>
+                    <div class="image-group" id="l3_imageGroup">
+                        <div class="image-wrapper" id="l3_imageWrapper">
+                            <span class="placeholder-tip">点击上方【高清大图】上传图片</span>
+                            <img id="l3_uploadedImage" src="" alt="上传图片预览">
+                        </div>
+                        <div class="image-caption" contenteditable="true">图：核心架构逻辑示意图</div>
+                    </div>
+                    <div class="explanation-text" id="l3_explanationText" contenteditable="true">
+                        <p>图示说明为该项目在核心工业以太网总线下的设备互联互通架构。</p>
+                        <p>系统利用边缘计算网关打通底层数据，保障了生产信息的实时和安全性。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 布局四 ===== -->
+        <div class="tab-panel" id="panel4">
+            <div class="control-panel">
+                <div class="control-group"><label>标题字号</label><input type="number" id="l4_titleSize" value="36" min="20" max="60" style="width:50px;"></div>
+                <div class="control-group"><label>概述字号</label><input type="number" id="l4_overviewSize" value="20" min="12" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>概述行距</label><input type="number" id="l4_overviewLineHeight" value="1.8" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>概述颜色</label><input type="color" id="l4_overviewColor" value="#0D233A" style="width:40px;"></div>
+                <div class="control-group"><label>高清大图</label><input type="file" id="l4_imageUpload" accept="image/*"></div>
+                <div class="control-group"><button class="download-btn" id="l4_downloadBtn" onclick="downloadContentPPTX(4)">⬇️ 生成PPTX</button></div>
+            </div>
+            <div class="info-panel">
+                <div>当前宽：<span id="l4_dispWidth">--</span> px</div>
+                <div>当前高：<span id="l4_dispHeight">--</span> px</div>
+                <div>弧度：<span id="l4_dispRadius">12px</span></div>
+            </div>
+            <div class="slide-container" id="slide4">
+                <div class="content-page" id="layout4">
+                    <div class="title-bar-wrapper">
+                        <div class="left-title-group">
+                            <span class="number" contenteditable="true">01</span>
+                            <span class="main-title" contenteditable="true">方案实施策略</span>
+                        </div>
+                        <span class="sub-title" contenteditable="true">核心推进路线与部署</span>
+                    </div>
+                    <div class="divider-line"></div>
+                    <div class="overview-wrapper" id="l4_overviewArea" contenteditable="true">
+                        <p>工业物联网平台的建设是一项系统性的工程。结合企业现有的信息化基础，我们制定了"分步实施、重点突破"的总体策略。</p>
+                        <p>通过对全流程数据的实时采集和深度解析，构建稳定的数据传输通道，以数字化赋能业务的决策和精细化管理。</p>
+                    </div>
+                    <div class="image-group" id="l4_imageGroup">
+                        <div class="image-wrapper" id="l4_imageWrapper">
+                            <span class="placeholder-tip">点击上方【高清大图】上传图片</span>
+                            <img id="l4_uploadedImage" src="" alt="上传图片预览">
+                        </div>
+                        <div class="image-caption" contenteditable="true">图：核心架构逻辑示意图</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 布局五 ===== -->
+        <div class="tab-panel" id="panel5">
+            <div class="control-panel">
+                <div class="control-group"><label>标题字号</label><input type="number" id="l5_titleSize" value="36" min="20" max="60" style="width:50px;"></div>
+                <div class="control-group"><label>卡片字号</label><input type="number" id="l5_cardSize" value="28" min="16" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>概述字号</label><input type="number" id="l5_overviewSize" value="20" min="12" max="50" style="width:50px;"></div>
+                <div class="control-group"><label>概述行距</label><input type="number" id="l5_overviewLineHeight" value="1.8" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>卡片行距</label><input type="number" id="l5_cardLineHeight" value="1.6" min="1.0" max="3.0" step="0.1" style="width:50px;"></div>
+                <div class="control-group"><label>概述颜色</label><input type="color" id="l5_overviewColor" value="#0D233A" style="width:40px;"></div>
+                <div class="control-group"><label>卡片正文颜色</label><input type="color" id="l5_cardBodyColor" value="#6B7A8F" style="width:40px;"></div>
+                <div class="control-group"><label>垂直间距</label><input type="number" id="l5_vGapSize" value="15" min="5" max="40" style="width:50px;"></div>
+                <div class="control-group">
+                    <label>卡片布局</label>
+                    <select id="l5_layoutType">
+                        <option value="h-2">1行2列</option>
+                        <option value="h-3">1行3列</option>
+                        <option value="v-2">2行1列</option>
+                        <option value="v-3">3行1列</option>
+                        <option value="v-4">4行1列</option>
+                        <option value="g-2x2">2行2列</option>
+                        <option value="g-2x3">2行3列</option>
+                    </select>
+                </div>
+                <div class="control-group"><button class="download-btn" id="l5_downloadBtn" onclick="downloadContentPPTX(5)">⬇️ 生成PPTX</button></div>
+            </div>
+            <div class="slide-container" id="slide5">
+                <div class="content-page" id="layout5">
+                    <div class="title-bar-wrapper">
+                        <div class="left-title-group">
+                            <span class="number" contenteditable="true">01</span>
+                            <span class="main-title" contenteditable="true">方案实施策略</span>
+                        </div>
+                        <span class="sub-title" contenteditable="true">核心推进路线与部署</span>
+                    </div>
+                    <div class="divider-line"></div>
+                    <div class="overview-wrapper" id="l5_overviewArea" contenteditable="true">
+                        <p>工业物联网平台的建设是一项系统性的工程。结合企业现有的信息化基础，我们制定了"分步实施、重点突破"的总体策略。</p>
+                        <p>通过对全流程数据的实时采集和深度解析，构建稳定的数据传输通道，以数字化赋能业务的决策和精细化管理。</p>
+                    </div>
+                    <div class="detail-wrapper">
+                        <div class="card-container layout-horizontal" id="l5_cardContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 布局六 ===== -->
+        <div class="tab-panel" id="panel6">
+            <div class="control-panel">
+                <div class="control-group"><label>📁 上传背景图</label><input type="file" id="l6_bgUpload" accept="image/*"></div>
+                <div class="control-group">
+                    <label>🎨 背景透明度</label>
+                    <div class="opacity-options">
+                        <button class="opacity-btn" data-opacity="0.20">轻度 20%</button>
+                        <button class="opacity-btn active" data-opacity="0.35">适中 35%</button>
+                        <button class="opacity-btn" data-opacity="0.50">清晰 50%</button>
+                    </div>
+                </div>
+                <div class="control-group"><button class="download-btn" id="l6_downloadBtn" onclick="downloadContentPPTX(6)">⬇️ 生成PPTX</button></div>
+            </div>
+            <div class="slide-container" id="slide6">
+                <div id="layout6" style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div id="l6_bgLayer"></div>
+                    <div class="l6-header" contenteditable="true">公司名称</div>
+                    <div class="content-chapter">
+                        <div class="chapter-number" contenteditable="true">01</div>
+                        <div class="chapter-title" contenteditable="true">项目概况与目标</div>
+                        <div class="chapter-subtitle" contenteditable="true">项目概况与核心目标设定</div>
+                    </div>
+                    <div class="l6-footer" contenteditable="true">
+                        <span>数据驱动</span> | <span>洞察问题</span> | <span>预测趋势</span> | <span>智能决策</span> | <span>科学管理</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JavaScript
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // 顶层工具切换
+        // ============================================================
+        document.querySelectorAll('.app-nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.app-nav-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const tool = this.getAttribute('data-tool');
+                document.querySelectorAll('.tool-container').forEach(c => c.classList.remove('active'));
+                document.getElementById('tool-' + tool).classList.add('active');
+            });
+        });
+
+        // ============================================================
+        // 工具1：三合一 (原7.html)
+        // ============================================================
+        (function() {
+            'use strict';
+
+            const tabBtns = document.querySelectorAll('#tool-triple .tab-btn');
+            const pageCover = document.getElementById('pageCover');
+            const pageToc = document.getElementById('pageToc');
+            const pageEnd = document.getElementById('pageEnd');
+            const bgCover = document.getElementById('bgCover');
+            const bgToc = document.getElementById('bgToc');
+            const bgEnd = document.getElementById('bgEnd');
+            const bgUpload = document.getElementById('bgUpload');
+            const bgLabel = document.getElementById('bgLabel');
+            const opacitySlider = document.getElementById('opacitySlider');
+            const opacityVal = document.getElementById('opacityVal');
+            const opacityBtns = document.querySelectorAll('#tool-triple .opts button');
+            const dimToggle = document.getElementById('dimToggle');
+            const dimArea = document.getElementById('dimArea');
+            const downloadBtn = document.getElementById('downloadBtnTriple');
+            const tocContainer = document.getElementById('tocContainer');
+            const itemCountSelector = document.getElementById('itemCountSelector');
+            const tocCountGroup = document.getElementById('tocCountGroup');
+
+            let currentTab = 'cover';
+            let bgCoverUrl = '';
+            let bgTocUrl = '';
+            let bgEndUrl = '';
+            let currentOpacity = 0.35;
+            let dimVisible = true;
+
+            function syncBackgrounds() {
+                bgCover.style.backgroundImage = bgCoverUrl ? 'url(' + bgCoverUrl + ')' : 'none';
+                bgToc.style.backgroundImage = bgTocUrl ? 'url(' + bgTocUrl + ')' : 'none';
+                bgEnd.style.backgroundImage = bgEndUrl ? 'url(' + bgEndUrl + ')' : 'none';
+                bgCover.style.opacity = currentOpacity;
+                bgToc.style.opacity = currentOpacity;
+                bgEnd.style.opacity = currentOpacity;
+            }
+
+            function setOpacity(val) {
+                const pct = Math.round(val * 100);
+                currentOpacity = val;
+                opacitySlider.value = pct;
+                opacityVal.textContent = pct + '%';
+                opacityBtns.forEach(btn => {
+                    const btnVal = parseFloat(btn.getAttribute('data-op'));
+                    btn.classList.toggle('active', Math.abs(btnVal - val) < 0.005);
+                });
+                syncBackgrounds();
+            }
+            opacitySlider.addEventListener('input', function() {
+                setOpacity(parseFloat(this.value) / 100);
+            });
+            opacityBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    setOpacity(parseFloat(this.getAttribute('data-op')));
+                });
+            });
+
+            bgUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const url = ev.target.result;
+                    if (currentTab === 'cover') { bgCoverUrl = url;
+                        bgLabel.textContent = '🖼️ 封面背景'; } else if (currentTab === 'toc') { bgTocUrl =
+                            url;
+                        bgLabel.textContent = '🖼️ 目录背景'; } else { bgEndUrl = url;
+                        bgLabel.textContent = '🖼️ 结束背景'; }
+                    syncBackgrounds();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            function switchTripleTab(tab) {
+                currentTab = tab;
+                tabBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+                });
+                pageCover.classList.toggle('active', tab === 'cover');
+                pageToc.classList.toggle('active', tab === 'toc');
+                pageEnd.classList.toggle('active', tab === 'end');
+                tocCountGroup.style.display = (tab === 'toc') ? 'flex' : 'none';
+                const isCover = tab === 'cover';
+                dimToggle.classList.toggle('hidden', !isCover);
+                if (isCover) {
+                    dimArea.style.opacity = dimVisible ? '1' : '0';
+                    dimToggle.textContent = dimVisible ? '☑ 隐藏尺寸线' : '☐ 显示尺寸线';
+                } else {
+                    dimArea.style.opacity = '0';
+                }
+                if (tab === 'cover') bgLabel.textContent = '🖼️ 封面背景';
+                else if (tab === 'toc') bgLabel.textContent = '🖼️ 目录背景';
+                else bgLabel.textContent = '🖼️ 结束背景';
+                if (tab === 'cover') setTimeout(alignTags, 80);
+            }
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-tab');
+                    if (tab === currentTab) return;
+                    switchTripleTab(tab);
+                });
+            });
+
+            dimToggle.addEventListener('click', function() {
+                if (currentTab !== 'cover') return;
+                dimVisible = !dimVisible;
+                dimArea.style.opacity = dimVisible ? '1' : '0';
+                this.textContent = dimVisible ? '☑ 隐藏尺寸线' : '☐ 显示尺寸线';
+            });
+
+            function renderTocItems(count) {
+                tocContainer.innerHTML = '';
+                const isTwoCol = (count === 6 || count === 8);
+                tocContainer.classList.toggle('double-column', isTwoCol);
+                for (let i = 1; i <= count; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'toc-item';
+                    const numSpan = document.createElement('span');
+                    numSpan.className = 'toc-number';
+                    numSpan.textContent = String(i).padStart(2, '0');
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'toc-text';
+                    textSpan.contentEditable = true;
+                    textSpan.textContent = '目录项目标题 ' + i;
+                    item.appendChild(numSpan);
+                    item.appendChild(textSpan);
+                    tocContainer.appendChild(item);
+                }
+            }
+            itemCountSelector.addEventListener('change', function() {
+                renderTocItems(parseInt(this.value));
+            });
+
+            function alignTags() {
+                const tags = document.querySelectorAll('#tool-triple #pageCover .tag');
+                if (!tags.length) return;
+                tags.forEach(t => { t.style.width = 'auto';
+                    t.style.height = 'auto'; });
+                let maxW = 0,
+                    maxH = 0;
+                tags.forEach(t => {
+                    const r = t.getBoundingClientRect();
+                    if (r.width > maxW) maxW = r.width;
+                    if (r.height > maxH) maxH = r.height;
+                });
+                tags.forEach(t => { t.style.width = maxW + 'px';
+                    t.style.height = maxH + 'px'; });
+            }
+            let alignTimer = null;
+
+            function scheduleAlign() {
+                if (alignTimer) cancelAnimationFrame(alignTimer);
+                alignTimer = requestAnimationFrame(() => { alignTags();
+                    alignTimer = null; });
+            }
+            const coverContentEl = document.querySelector('#tool-triple #pageCover .cover-content');
+            if (coverContentEl) {
+                const obs = new MutationObserver(() => scheduleAlign());
+                obs.observe(coverContentEl, { childList: true, subtree: true, characterData: true });
+            }
+            document.addEventListener('input', function(e) {
+                if (e.target.classList && e.target.classList.contains('tag')) scheduleAlign();
+            });
+            window.addEventListener('resize', function() {
+                if (resizeTimer) cancelAnimationFrame(resizeTimer);
+                resizeTimer = requestAnimationFrame(() => { alignTags();
+                    resizeTimer = null; });
+            });
+            let resizeTimer = null;
+            setTimeout(alignTags, 200);
+
+            downloadBtn.addEventListener('click', async function() {
+                const btn = this;
+                btn.disabled = true;
+                btn.textContent = '⏳ 生成三页中…';
+                try {
+                    const originalTab = currentTab;
+                    const dimOrig = dimArea.style.opacity;
+                    dimArea.style.opacity = '0';
+
+                    async function capturePage(pageEl, fixFn) {
+                        pageEl.classList.add('active');
+                        [pageCover, pageToc, pageEnd].forEach(p => {
+                            if (p !== pageEl) p.classList.remove('active');
+                        });
+                        await new Promise(r => requestAnimationFrame(r));
+                        await new Promise(r => setTimeout(r, 60));
+                        const canvas = await html2canvas(pageEl, {
+                            scale: 3,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: null,
+                            onclone: fixFn || function() {}
+                        });
+                        return canvas;
+                    }
+
+                    const fixCover = function(cloned) {
+                        const cover = cloned.getElementById('pageCover');
+                        if (cover) {
+                            const cs = cover.querySelectorAll('.c, .s');
+                            cs.forEach(el => {
+                                el.style.webkitBackgroundClip = 'unset';
+                                el.style.backgroundClip = 'unset';
+                                el.style.webkitTextFillColor = 'unset';
+                                el.style.background = 'transparent';
+                                if (el.classList.contains('c')) el.style.color = '#00B0F0';
+                                else if (el.classList.contains('s')) el.style.color = '#E67E22';
+                            });
+                            const tags = cover.querySelectorAll('.tag');
+                            tags.forEach(t => {
+                                t.style.display = 'flex';
+                                t.style.justifyContent = 'center';
+                                t.style.alignItems = 'center';
+                                t.style.textAlign = 'center';
+                                t.style.lineHeight = 'normal';
+                            });
+                        }
+                    };
+                    const fixToc = function(cloned) {
+                        const toc = cloned.getElementById('pageToc');
+                        if (toc) {
+                            const container = toc.querySelector('.toc-container');
+                            if (container) {
+                                const count = container.children.length;
+                                if (count === 6 || count === 8) {
+                                    container.classList.add('double-column');
+                                } else {
+                                    container.classList.remove('double-column');
+                                }
+                            }
+                        }
+                    };
+                    const fixEnd = function() {};
+
+                    const canvasCover = await capturePage(pageCover, fixCover);
+                    const canvasToc = await capturePage(pageToc, fixToc);
+                    const canvasEnd = await capturePage(pageEnd, fixEnd);
+
+                    [pageCover, pageToc, pageEnd].forEach(p => p.classList.remove('active'));
+                    if (originalTab === 'cover') pageCover.classList.add('active');
+                    else if (originalTab === 'toc') pageToc.classList.add('active');
+                    else pageEnd.classList.add('active');
+                    dimArea.style.opacity = dimOrig;
+
+                    const pptx = new PptxGenJS();
+                    pptx.defineLayout({ name: 'WIDE', width: 13.33, height: 7.5 });
+                    const addSlideFromCanvas = (canvas) => {
+                        const slide = pptx.addSlide('WIDE');
+                        slide.addImage({ data: canvas.toDataURL('image/png'), x: 0, y: 0, w: '100%',
+                            h: '100%' });
+                    };
+                    addSlideFromCanvas(canvasCover);
+                    addSlideFromCanvas(canvasToc);
+                    addSlideFromCanvas(canvasEnd);
+                    await pptx.writeFile({ fileName: '三页演示文稿_封面+目录+结束页.pptx' });
+                    btn.textContent = '✅ 三页下载成功！';
+                    setTimeout(() => {
+                        btn.textContent = '⬇️ 生成三页PPTX';
+                        btn.disabled = false;
+                    }, 2800);
+                } catch (err) {
+                    console.error(err);
+                    alert('生成失败，请检查网络后重试。');
+                    btn.textContent = '⬇️ 生成三页PPTX';
+                    btn.disabled = false;
+                }
+            });
+
+            setOpacity(0.35);
+            renderTocItems(6);
+            switchTripleTab('cover');
+        })();
+
+        // ============================================================
+        // 工具2：内容页六合一 (原1-6.html)
+        // ============================================================
+        // 标签切换
+        function switchContentTab(n) {
+            document.querySelectorAll('#tool-content .tab-panel').forEach((p, i) => {
+                p.classList.toggle('active', i + 1 === n);
+            });
+            document.querySelectorAll('#tool-content .tab-btn').forEach((b, i) => {
+                b.classList.toggle('active', i + 1 === n);
+            });
+            if (n === 1) { l1_updateDynamicLayout();
+                l1_updateImageDimensions(); }
+            if (n === 2) { l2_updateDynamicLayout();
+                l2_syncHeights();
+                l2_updateImageDimensions(); }
+            if (n === 3) { l3_updateDynamicLayout();
+                l3_updateImageDimensions(); }
+            if (n === 4) { l4_updateDynamicLayout();
+                l4_updateImageDimensions(); }
+            if (n === 5) { l5_updateDynamicLayout(); }
+        }
+
+        // 下载
+        const PPTX_FILENAMES = {
+            1: '内容页_左图右文.pptx',
+            2: '内容页_多图组.pptx',
+            3: '内容页_上文下图解释.pptx',
+            4: '内容页_上文下图.pptx',
+            5: '内容页_卡片式.pptx',
+            6: '章节页.pptx'
+        };
+
+        async function downloadContentPPTX(n) {
+            const btn = document.getElementById('l' + n + '_downloadBtn');
+            if (!btn) return;
+            btn.disabled = true;
+            btn.textContent = '⏳ 生成中...';
+            try {
+                const canvas = await html2canvas(document.getElementById('slide' + n), {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null
+                });
+                const imgData = canvas.toDataURL('image/png');
+                const pptx = new PptxGenJS();
+                pptx.defineLayout({ name: 'WIDE', width: 13.33, height: 7.5 });
+                const slide = pptx.addSlide('WIDE');
+                slide.addImage({ data: imgData, x: 0, y: 0, w: '100%', h: '100%' });
+                await pptx.writeFile({ fileName: PPTX_FILENAMES[n] });
+                btn.textContent = '✅ 成功！';
+                setTimeout(() => { btn.textContent = '⬇️ 生成PPTX';
+                    btn.disabled = false; }, 3000);
+            } catch (e) {
+                console.error(e);
+                alert('生成失败，请重试');
+                btn.textContent = '⬇️ 生成PPTX';
+                btn.disabled = false;
+            }
+        }
+
+        // ---- 布局一 ----
+        (function() {
+            const SLIDE_HEIGHT = 720,
+                TOP_PAD = 30,
+                GAP = 25,
+                BOTTOM_PAD = GAP;
+            const TITLE_SUB_RATIO = 0.75,
+                DETAIL_BODY_RATIO = 0.75;
+            const defaultDetailData = [
+                { num: '01', title: '数据采集与传输', desc: '建立稳健的工业数据总线，实现设备层、边缘层数据的实时采集与高速通道传输。' },
+                { num: '02', title: '数据中台架构', desc: '搭建数据湖与数据仓库，通过流计算引擎将原始数据进行加工、清洗与标准化。' },
+                { num: '03', title: '智能分析决策', desc: '基于算法模型对时序数据进行深度挖掘，为生产排期、质量预测提供科学建议。' },
+                { num: '04', title: '孪生可视化', desc: '构建高保真的设备/产线 3D 数字孪生模型，实现全流程可视化管控和仿真推演。' },
+                { num: '05', title: '安全与运维', desc: '建立分层安全防护体系，结合 AI 预警机制，保障物联网络的稳定可靠运行。' }
+            ];
+            const g = id => document.getElementById(id);
+            const titleSizeInput = g('l1_titleSize'),
+                overviewSizeInput = g('l1_overviewSize');
+            const overviewLineHeightInput = g('l1_overviewLineHeight'),
+                overviewColorInput = g('l1_overviewColor');
+            const imageRatioInput = g('l1_imageRatio'),
+                detailCountSelect = g('l1_detailCount');
+            const detailSizeInput = g('l1_detailSize'),
+                detailLineHeightInput = g('l1_detailLineHeight');
+            const detailColorInput = g('l1_detailColor'),
+                imageUpload = g('l1_imageUpload');
+            const uploadedImage = g('l1_uploadedImage'),
+                imageWrapper = g('l1_imageWrapper');
+            const placeholderTip = imageWrapper.querySelector('.placeholder-tip');
+            const overviewArea = g('l1_overviewArea'),
+                columnDetail = g('l1_columnDetail');
+            const columnImage = g('l1_columnImage'),
+                splitLayout = g('l1_splitLayout');
+            const dispWidth = g('l1_dispWidth'),
+                dispHeight = g('l1_dispHeight'),
+                dispRadius = g('l1_dispRadius');
+
+            function applyTitleSizes() {
+                const sz = parseInt(titleSizeInput.value);
+                if (sz < 20) { titleSizeInput.value = 20; return; }
+                document.querySelector('#layout1 .title-bar-wrapper .number').style.fontSize = sz + 'px';
+                document.querySelector('#layout1 .title-bar-wrapper .main-title').style.fontSize = sz + 'px';
+                document.querySelector('#layout1 .title-bar-wrapper .sub-title').style.fontSize = (sz * TITLE_SUB_RATIO) +
+                    'px';
+                if (parseInt(overviewSizeInput.value) > sz) { overviewSizeInput.value = sz;
+                    applyOverviewSizes(); }
+                if (parseInt(detailSizeInput.value) > sz) { detailSizeInput.value = sz;
+                    applyDetailStyles(); }
+            }
+
+            function applyOverviewSizes() {
+                const val = parseInt(overviewSizeInput.value),
+                    max = parseInt(titleSizeInput.value);
+                overviewArea.style.fontSize = (val > max ? (overviewSizeInput.value = max, max) : val) + 'px';
+            }
+
+            function applyDetailStyles() {
+                const sz = parseInt(detailSizeInput.value),
+                    max = parseInt(titleSizeInput.value);
+                if (sz > max) detailSizeInput.value = max;
+                renderDetailItems(detailCountSelect.value);
+            }
+
+            function applySplitRatio() {
+                const r = parseInt(imageRatioInput.value);
+                if (r < 30 || r > 70) return;
+                columnImage.style.flex = '0 0 calc(' + r + '% - 20px)';
+                columnDetail.style.flex = '0 0 calc(' + (100 - r) + '% - 20px)';
+            }
+
+            function renderDetailItems(countStr) {
+                const count = parseInt(countStr);
+                columnDetail.innerHTML = '';
+                columnDetail.style.justifyContent = count === 2 ? 'flex-start' : 'space-between';
+                columnDetail.style.gap = count === 2 ? '25px' : '0px';
+                const sz = parseInt(detailSizeInput.value),
+                    bodySz = Math.floor(sz * DETAIL_BODY_RATIO);
+                const lh = detailLineHeightInput.value,
+                    color = detailColorInput.value;
+                for (let i = 0; i < count; i++) {
+                    const d = defaultDetailData[i];
+                    const div = document.createElement('div');
+                    div.className = 'detail-item';
+                    div.innerHTML =
+                        `
+                <div class="detail-header" style="font-size:${sz}px;">
+                  <span class="d-number" contenteditable="true">${d.num}</span>
+                  <span class="d-title" contenteditable="true">${d.title}</span>
+                </div>
+                <div class="detail-body" contenteditable="true" style="font-size:${bodySz}px;color:${color};line-height:${lh};">${d.desc}</div>`;
+                    columnDetail.appendChild(div);
+                }
+            }
+            window.l1_updateDynamicLayout = function() {
+                const th = document.querySelector('#layout1 .title-bar-wrapper').getBoundingClientRect().height;
+                const oh = overviewArea.getBoundingClientRect().height;
+                const sh = SLIDE_HEIGHT - TOP_PAD - th - (GAP * 4) - oh - BOTTOM_PAD;
+                splitLayout.style.height = (sh > 100 ? sh : 200) + 'px';
+            };
+            window.l1_updateImageDimensions = function() {
+                const r = imageWrapper.getBoundingClientRect();
+                dispWidth.textContent = Math.round(r.width);
+                dispHeight.textContent = Math.round(r.height);
+                dispRadius.textContent = window.getComputedStyle(imageWrapper).borderRadius;
+            };
+            titleSizeInput.addEventListener('input', applyTitleSizes);
+            overviewSizeInput.addEventListener('input', applyOverviewSizes);
+            detailSizeInput.addEventListener('input', applyDetailStyles);
+            detailCountSelect.addEventListener('change', applyDetailStyles);
+            imageRatioInput.addEventListener('input', applySplitRatio);
+            overviewLineHeightInput.addEventListener('input', () => overviewArea.style.lineHeight = overviewLineHeightInput
+                .value);
+            overviewColorInput.addEventListener('input', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed && overviewArea.contains(sel.anchorNode)) {
+                    document.execCommand('foreColor', false, this.value);
+                    sel.removeAllRanges();
+                } else { overviewArea.style.color = this.value; }
+            });
+            overviewArea.addEventListener('mouseup', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed && this.contains(sel.anchorNode))
+                    setTimeout(() => overviewColorInput.click(), 10);
+            });
+            detailLineHeightInput.addEventListener('input', applyDetailStyles);
+            detailColorInput.addEventListener('input', function() {
+                const sel = window.getSelection();
+                let inBody = false;
+                if (sel.rangeCount > 0 && !sel.isCollapsed) {
+                    let n = sel.anchorNode;
+                    while (n) { if (n.classList && n.classList.contains('detail-body')) { inBody = true; break; }
+                        n = n.parentNode; }
+                }
+                if (inBody) { document.execCommand('foreColor', false, this.value);
+                    sel.removeAllRanges(); } else { document.querySelectorAll('#layout1 .detail-body')
+                        .forEach(el => el.style.color = this.value); }
+            });
+            document.addEventListener('mouseup', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed) {
+                    let n = sel.anchorNode;
+                    while (n) {
+                        if (n.classList && n.classList.contains('detail-body')) { setTimeout(() =>
+                                detailColorInput.click(), 10); break; }
+                        n = n.parentNode;
+                    }
+                }
+            });
+            imageUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    uploadedImage.src = ev.target.result;
+                    uploadedImage.style.display = 'block';
+                    placeholderTip.style.display = 'none';
+                    window.l1_updateImageDimensions();
+                };
+                reader.readAsDataURL(file);
+            });
+            overviewArea.addEventListener('input', window.l1_updateDynamicLayout);
+            uploadedImage.addEventListener('load', window.l1_updateDynamicLayout);
+            new ResizeObserver(window.l1_updateImageDimensions).observe(imageWrapper);
+            applyTitleSizes();
+            applySplitRatio();
+            applyDetailStyles();
+            setTimeout(window.l1_updateDynamicLayout, 100);
+        })();
+
+        // ---- 布局二 ----
+        (function() {
+            const SLIDE_HEIGHT = 720,
+                TOP_PAD = 30,
+                GAP = 25,
+                BOTTOM_PAD = GAP,
+                TITLE_SUB_RATIO = 0.75;
+            const EXP_RATIO = 1.25;
+            const defaultData = [
+                { caption: '图1：设备互联架构', expTitle: '01. 设备互联', expBody: '通过工业以太网打通各类设备底层通讯协议。' },
+                { caption: '图2：大数据中心', expTitle: '02. 数据中心', expBody: '搭建数据中台，保障实时数据分析的精准性。' },
+                { caption: '图3：AI决策模型', expTitle: '03. 智能决策', expBody: '结合AI算法，辅助管理人员科学决策。' }
+            ];
+            let currentGroupData = JSON.parse(JSON.stringify(defaultData));
+            let isUpdatingExpSizes = false;
+            const g = id => document.getElementById(id);
+            const titleSizeInput = g('l2_titleSize'),
+                overviewSizeInput = g('l2_overviewSize');
+            const overviewLineHeightInput = g('l2_overviewLineHeight'),
+                overviewColorInput = g('l2_overviewColor');
+            const expTitleSizeInput = g('l2_expTitleSize'),
+                expBodySizeInput = g('l2_expBodySize');
+            const explanationLineHeightInput = g('l2_explanationLineHeight'),
+                explanationColorInput = g('l2_explanationColor');
+            const groupCountSelect = g('l2_groupCount'),
+                groupContainer = g('l2_groupContainer');
+            const overviewArea = g('l2_overviewArea');
+            const dispWidth = g('l2_dispWidth'),
+                dispHeight = g('l2_dispHeight'),
+                dispRadius = g('l2_dispRadius');
+
+            function renderGroups(count) {
+                groupContainer.innerHTML = '';
+                groupContainer.className = 'group-container columns-' + count;
+                const eTsz = parseInt(expTitleSizeInput.value),
+                    eBsz = parseInt(expBodySizeInput.value);
+                const eLh = explanationLineHeightInput.value,
+                    eColor = explanationColorInput.value;
+                for (let i = 0; i < count; i++) {
+                    const d = currentGroupData[i] || { caption: '图 ' + (i + 1), expTitle: '章节 ' + (i + 1),
+                        expBody: '请输入解释文本...' };
+                    const div = document.createElement('div');
+                    div.className = 'content-group';
+                    div.innerHTML =
+                        `
+                <div class="image-group">
+                  <div class="image-wrapper" data-index="${i}">
+                    <span class="placeholder-tip">点击占位上传图片</span>
+                    <img id="l2_img_${i}" src="" alt="上传图片预览" style="display:none;">
+                  </div>
+                  <div class="image-caption" contenteditable="true">${d.caption}</div>
+                </div>
+                <div class="explanation-group" style="color:${eColor};">
+                  <div class="explanation-title" contenteditable="true" style="font-size:${eTsz}px;">${d.expTitle}</div>
+                  <div class="explanation-body" contenteditable="true" style="font-size:${eBsz}px;line-height:${eLh};">${d.expBody}</div>
+                </div>`;
+                    groupContainer.appendChild(div);
+                }
+                setupImageUploads();
+                requestAnimationFrame(() => { window.l2_updateDynamicLayout();
+                    window.l2_syncHeights();
+                    window.l2_updateImageDimensions(); });
+            }
+
+            function setupImageUploads() {
+                document.querySelectorAll('#layout2 .image-wrapper').forEach(wrapper => {
+                    let fi = wrapper.querySelector('.hidden-file-input');
+                    if (!fi) {
+                        fi = document.createElement('input');
+                        fi.type = 'file';
+                        fi.accept = 'image/*';
+                        fi.className = 'hidden-file-input';
+                        fi.style.display = 'none';
+                        wrapper.appendChild(fi);
+                        fi.addEventListener('change', function(e) {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = ev => {
+                                const img = wrapper.querySelector('img'),
+                                    tip = wrapper.querySelector('.placeholder-tip');
+                                img.src = ev.target.result;
+                                img.style.display = 'block';
+                                tip.style.display = 'none';
+                                img.onload = () => requestAnimationFrame(() => { window
+                                        .l2_updateDynamicLayout();
+                                        window.l2_syncHeights(); });
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                    wrapper.addEventListener('click', function(e) { if (e.target.tagName !== 'IMG') fi.click(); });
+                });
+                document.querySelectorAll('#layout2 .explanation-body, #layout2 .image-caption, #layout2 .explanation-title')
+                    .forEach(el => {
+                        el.addEventListener('input', () => requestAnimationFrame(() => { window
+                                .l2_updateDynamicLayout();
+                            window.l2_syncHeights(); }));
+                    });
+            }
+            window.l2_updateDynamicLayout = function() {
+                const th = document.querySelector('#layout2 .title-bar-wrapper').getBoundingClientRect().height;
+                const oh = overviewArea.getBoundingClientRect().height;
+                const h = SLIDE_HEIGHT - TOP_PAD - th - (GAP * 3) - oh - BOTTOM_PAD;
+                groupContainer.style.height = (h > 150 ? h : 200) + 'px';
+            };
+            window.l2_syncHeights = function() {
+                const groups = document.querySelectorAll('#layout2 .content-group');
+                if (!groups.length) return;
+                let maxExpH = 0;
+                groups.forEach(g => {
+                    g.querySelector('.image-group').style.height = 'auto';
+                    g.querySelector('.explanation-group').style.height = 'auto';
+                });
+                groups.forEach(g => {
+                    const h = g.querySelector('.explanation-group').getBoundingClientRect().height;
+                    if (h > maxExpH) maxExpH = h;
+                });
+                groups.forEach(g => { g.querySelector('.explanation-group').style.height = maxExpH + 'px'; });
+                window.l2_updateImageDimensions();
+            };
+            window.l2_updateImageDimensions = function() {
+                const w = document.querySelector('#layout2 .image-wrapper');
+                if (w) {
+                    const r = w.getBoundingClientRect();
+                    dispWidth.textContent = Math.round(r.width);
+                    dispHeight.textContent = Math.round(r.height);
+                    dispRadius.textContent = window.getComputedStyle(w).borderRadius;
+                }
+            };
+
+            function applyTitleSizes() {
+                const sz = parseInt(titleSizeInput.value);
+                if (sz < 20) return;
+                document.querySelector('#layout2 .title-bar-wrapper .number').style.fontSize = sz + 'px';
+                document.querySelector('#layout2 .title-bar-wrapper .main-title').style.fontSize = sz + 'px';
+                document.querySelector('#layout2 .title-bar-wrapper .sub-title').style.fontSize = (sz * TITLE_SUB_RATIO) +
+                    'px';
+                if (parseInt(overviewSizeInput.value) > sz) { overviewSizeInput.value = sz;
+                    applyOverviewSizes(); }
+                if (parseInt(expTitleSizeInput.value) > sz) { expTitleSizeInput.value = sz;
+                    applyExplanationSizes('title', sz); }
+            }
+
+            function applyOverviewSizes() {
+                const val = parseInt(overviewSizeInput.value),
+                    max = parseInt(titleSizeInput.value);
+                overviewArea.style.fontSize = (val > max ? (overviewSizeInput.value = max, max) : val) + 'px';
+            }
+
+            function applyExplanationSizes(source, val) {
+                if (isUpdatingExpSizes) return;
+                isUpdatingExpSizes = true;
+                const max = parseInt(titleSizeInput.value);
+                let tsz = parseInt(expTitleSizeInput.value),
+                    bsz = parseInt(expBodySizeInput.value);
+                if (source === 'title') {
+                    tsz = val;
+                    bsz = Math.round(tsz / EXP_RATIO);
+                    if (tsz > max) tsz = max;
+                    if (bsz > max) bsz = max;
+                    if (bsz >= tsz) bsz = tsz - 1;
+                    if (bsz < 10) bsz = 10;
+                    expTitleSizeInput.value = tsz;
+                    expBodySizeInput.value = bsz;
+                } else {
+                    bsz = val;
+                    tsz = Math.round(bsz * EXP_RATIO);
+                    if (bsz > max) bsz = max;
+                    if (tsz > max) tsz = max;
+                    if (tsz <= bsz) tsz = bsz + 1;
+                    expBodySizeInput.value = bsz;
+                    expTitleSizeInput.value = tsz;
+                }
+                document.querySelectorAll('#layout2 .explanation-title').forEach(el => el.style.fontSize = tsz + 'px');
+                document.querySelectorAll('#layout2 .explanation-body').forEach(el => el.style.fontSize = bsz + 'px');
+                requestAnimationFrame(() => { window.l2_updateDynamicLayout();
+                    window.l2_syncHeights(); });
+                isUpdatingExpSizes = false;
+            }
+            titleSizeInput.addEventListener('input', applyTitleSizes);
+            overviewSizeInput.addEventListener('input', applyOverviewSizes);
+            expTitleSizeInput.addEventListener('input', function() { applyExplanationSizes('title', parseInt(this
+                    .value)); });
+            expBodySizeInput.addEventListener('input', function() { applyExplanationSizes('body', parseInt(this
+                .value)); });
+            overviewLineHeightInput.addEventListener('input', () => overviewArea.style.lineHeight = overviewLineHeightInput
+                .value);
+            explanationLineHeightInput.addEventListener('input', function() {
+                document.querySelectorAll('#layout2 .explanation-body').forEach(el => el.style.lineHeight = this
+                    .value);
+                requestAnimationFrame(() => { window.l2_updateDynamicLayout();
+                    window.l2_syncHeights(); });
+            });
+            overviewColorInput.addEventListener('input', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed && overviewArea.contains(sel.anchorNode)) {
+                    document.execCommand('foreColor', false, this.value);
+                    sel.removeAllRanges();
+                } else { overviewArea.style.color = this.value; }
+            });
+            overviewArea.addEventListener('mouseup', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed && this.contains(sel.anchorNode))
+                    setTimeout(() => overviewColorInput.click(), 10);
+            });
+            const mutObs = new MutationObserver(() => {
+                document.querySelectorAll('#layout2 .explanation-body').forEach(body => {
+                    if (!body.dataset.bound) {
+                        body.addEventListener('mouseup', function() {
+                            const sel = window.getSelection();
+                            if (sel.rangeCount > 0 && !sel.isCollapsed && this.contains(sel
+                                .anchorNode))
+                                setTimeout(() => explanationColorInput.click(), 10);
+                        });
+                        explanationColorInput.addEventListener('input', function() {
+                            const sel = window.getSelection();
+                            if (sel.rangeCount > 0 && !sel.isCollapsed && body.contains(sel
+                                .anchorNode)) {
+                                document.execCommand('foreColor', false, this.value);
+                                sel.removeAllRanges();
+                            } else { document.querySelectorAll('#layout2 .explanation-body')
+                                    .forEach(el => el.style.color = this.value); }
+                        });
+                        body.dataset.bound = 'true';
+                    }
+                });
+            });
+            mutObs.observe(groupContainer, { childList: true, subtree: true });
+            groupCountSelect.addEventListener('change', function() {
+                const cnt = parseInt(this.value);
+                currentGroupData = [];
+                for (let i = 0; i < cnt; i++) currentGroupData.push(defaultData[i] || { caption: '图 ' + (i + 1),
+                        expTitle: '章节 ' + (i + 1), expBody: '请输入解释文本...' });
+                renderGroups(cnt);
+            });
+            renderGroups(2);
+            applyTitleSizes();
+            applyOverviewSizes();
+        })();
+
+        // ---- 布局三 ----
+        (function() {
+            const SLIDE_HEIGHT = 720,
+                TOP_PAD = 30,
+                GAP = 25,
+                BOTTOM_PAD = GAP,
+                TITLE_SUB_RATIO = 0.75;
+            const g = id => document.getElementById(id);
+            const titleSizeInput = g('l3_titleSize'),
+                overviewSizeInput = g('l3_overviewSize');
+            const overviewLineHeightInput = g('l3_overviewLineHeight'),
+                overviewColorInput = g('l3_overviewColor');
+            const explanationSizeInput = g('l3_explanationSize'),
+                explanationLineHeightInput = g('l3_explanationLineHeight');
+            const explanationColorInput = g('l3_explanationColor'),
+                imageUpload = g('l3_imageUpload');
+            const uploadedImage = g('l3_uploadedImage'),
+                imageWrapper = g('l3_imageWrapper');
+            const placeholderTip = imageWrapper.querySelector('.placeholder-tip');
+            const overviewArea = g('l3_overviewArea'),
+                explanationArea = g('l3_explanationText');
+            const imageGroup = g('l3_imageGroup');
+            const dispWidth = g('l3_dispWidth'),
+                dispHeight = g('l3_dispHeight'),
+                dispRadius = g('l3_dispRadius');
+
+            function applyTitleSizes() {
+                const sz = parseInt(titleSizeInput.value);
+                if (sz < 20) { titleSizeInput.value = 20; return; }
+                document.querySelector('#layout3 .title-bar-wrapper .number').style.fontSize = sz + 'px';
+                document.querySelector('#layout3 .title-bar-wrapper .main-title').style.fontSize = sz + 'px';
+                document.querySelector('#layout3 .title-bar-wrapper .sub-title').style.fontSize = (sz * TITLE_SUB_RATIO) +
+                    'px';
+                if (parseInt(overviewSizeInput.value) > sz) { overviewSizeInput.value = sz;
+                    applyOverviewSizes(); }
+                if (parseInt(explanationSizeInput.value) > sz) { explanationSizeInput.value = sz;
+                    applyExplanationSizes(); }
+            }
+
+            function applyOverviewSizes() {
+                const val = parseInt(overviewSizeInput.value),
+                    max = parseInt(titleSizeInput.value);
+                overviewArea.style.fontSize = (val > max ? (overviewSizeInput.value = max, max) : val) + 'px';
+            }
+
+            function applyExplanationSizes() {
+                const val = parseInt(explanationSizeInput.value),
+                    max = parseInt(titleSizeInput.value);
+                explanationArea.style.fontSize = (val > max ? (explanationSizeInput.value = max, max) : val) + 'px';
+            }
+            window.l3_updateDynamicLayout = function() {
+                const th = document.querySelector('#layout3 .title-bar-wrapper').getBoundingClientRect().height;
+                const oh = overviewArea.getBoundingClientRect().height;
+                const eh = explanationArea.getBoundingClientRect().height;
+                const h = SLIDE_HEIGHT - TOP_PAD - (GAP * 5) - BOTTOM_PAD - th - oh - eh;
+                imageGroup.style.height = (h > 150 ? h : 200) + 'px';
+            };
+            window.l3_updateImageDimensions = function() {
+                const r = imageWrapper.getBoundingClientRect();
+                dispWidth.textContent = Math.round(r.width);
+                dispHeight.textContent = Math.round(r.height);
+                dispRadius.textContent = window.getComputedStyle(imageWrapper).borderRadius;
+            };
+
+            function setupColorPicker(target, input) {
+                target.addEventListener('mouseup', function() {
+                    const sel = window.getSelection();
+                    if (sel.rangeCount > 0 && !sel.isCollapsed && this.contains(sel.anchorNode))
+                        setTimeout(() => input.click(), 10);
+                });
+                input.addEventListener('input', function() {
+                    const sel = window.getSelection();
+                    if (sel.rangeCount > 0 && !sel.isCollapsed && target.contains(sel.anchorNode)) {
+                        document.execCommand('foreColor', false, this.value);
+                        sel.removeAllRanges();
+                    } else { target.style.color = this.value; }
+                });
+            }
+            titleSizeInput.addEventListener('input', applyTitleSizes);
+            overviewSizeInput.addEventListener('input', applyOverviewSizes);
+            explanationSizeInput.addEventListener('input', applyExplanationSizes);
+            overviewLineHeightInput.addEventListener('input', () => overviewArea.style.lineHeight = overviewLineHeightInput
+                .value);
+            explanationLineHeightInput.addEventListener('input', () => explanationArea.style.lineHeight =
+                explanationLineHeightInput.value);
+            setupColorPicker(overviewArea, overviewColorInput);
+            setupColorPicker(explanationArea, explanationColorInput);
+            imageUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    uploadedImage.src = ev.target.result;
+                    uploadedImage.style.display = 'block';
+                    placeholderTip.style.display = 'none';
+                    window.l3_updateImageDimensions();
+                };
+                reader.readAsDataURL(file);
+            });
+            overviewArea.addEventListener('input', window.l3_updateDynamicLayout);
+            explanationArea.addEventListener('input', window.l3_updateDynamicLayout);
+            uploadedImage.addEventListener('load', window.l3_updateDynamicLayout);
+            new ResizeObserver(window.l3_updateImageDimensions).observe(imageWrapper);
+            applyTitleSizes();
+            applyOverviewSizes();
+            applyExplanationSizes();
+            setTimeout(window.l3_updateDynamicLayout, 100);
+        })();
+
+        // ---- 布局四 ----
+        (function() {
+            const SLIDE_HEIGHT = 720,
+                TOP_PAD = 30,
+                GAP = 25,
+                BOTTOM_PAD = GAP,
+                TITLE_SUB_RATIO = 0.75;
+            const g = id => document.getElementById(id);
+            const titleSizeInput = g('l4_titleSize'),
+                overviewSizeInput = g('l4_overviewSize');
+            const overviewLineHeightInput = g('l4_overviewLineHeight'),
+                overviewColorInput = g('l4_overviewColor');
+            const imageUpload = g('l4_imageUpload'),
+                uploadedImage = g('l4_uploadedImage');
+            const imageWrapper = g('l4_imageWrapper'),
+                placeholderTip = imageWrapper.querySelector('.placeholder-tip');
+            const overviewArea = g('l4_overviewArea'),
+                imageGroup = g('l4_imageGroup');
+            const dispWidth = g('l4_dispWidth'),
+                dispHeight = g('l4_dispHeight'),
+                dispRadius = g('l4_dispRadius');
+
+            function applyTitleSizes() {
+                const sz = parseInt(titleSizeInput.value);
+                if (sz < 20) { titleSizeInput.value = 20; return; }
+                document.querySelector('#layout4 .title-bar-wrapper .number').style.fontSize = sz + 'px';
+                document.querySelector('#layout4 .title-bar-wrapper .main-title').style.fontSize = sz + 'px';
+                document.querySelector('#layout4 .title-bar-wrapper .sub-title').style.fontSize = (sz * TITLE_SUB_RATIO) +
+                    'px';
+                if (parseInt(overviewSizeInput.value) > sz) { overviewSizeInput.value = sz;
+                    applyOverviewSizes(); }
+            }
+
+            function applyOverviewSizes() {
+                const val = parseInt(overviewSizeInput.value),
+                    max = parseInt(titleSizeInput.value);
+                overviewArea.style.fontSize = (val > max ? (overviewSizeInput.value = max, max) : val) + 'px';
+            }
+            window.l4_updateDynamicLayout = function() {
+                const th = document.querySelector('#layout4 .title-bar-wrapper').getBoundingClientRect().height;
+                const oh = overviewArea.getBoundingClientRect().height;
+                const h = SLIDE_HEIGHT - TOP_PAD - th - (GAP * 4) - oh - BOTTOM_PAD;
+                imageGroup.style.height = (h > 150 ? h : 200) + 'px';
+            };
+            window.l4_updateImageDimensions = function() {
+                const r = imageWrapper.getBoundingClientRect();
+                dispWidth.textContent = Math.round(r.width);
+                dispHeight.textContent = Math.round(r.height);
+                dispRadius.textContent = window.getComputedStyle(imageWrapper).borderRadius;
+            };
+            titleSizeInput.addEventListener('input', applyTitleSizes);
+            overviewSizeInput.addEventListener('input', applyOverviewSizes);
+            overviewLineHeightInput.addEventListener('input', () => overviewArea.style.lineHeight = overviewLineHeightInput
+                .value);
+            overviewColorInput.addEventListener('input', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed && overviewArea.contains(sel.anchorNode)) {
+                    document.execCommand('foreColor', false, this.value);
+                    sel.removeAllRanges();
+                } else { overviewArea.style.color = this.value; }
+            });
+            overviewArea.addEventListener('mouseup', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed && this.contains(sel.anchorNode))
+                    setTimeout(() => overviewColorInput.click(), 10);
+            });
+            imageUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    uploadedImage.src = ev.target.result;
+                    uploadedImage.style.display = 'block';
+                    placeholderTip.style.display = 'none';
+                    window.l4_updateImageDimensions();
+                };
+                reader.readAsDataURL(file);
+            });
+            overviewArea.addEventListener('input', window.l4_updateDynamicLayout);
+            uploadedImage.addEventListener('load', window.l4_updateDynamicLayout);
+            new ResizeObserver(window.l4_updateImageDimensions).observe(imageWrapper);
+            applyTitleSizes();
+            applyOverviewSizes();
+            setTimeout(window.l4_updateDynamicLayout, 100);
+        })();
+
+        // ---- 布局五 ----
+        (function() {
+            const SLIDE_HEIGHT = 720,
+                TOP_PAD = 30,
+                GAP = 25,
+                BOTTOM_PAD = GAP;
+            const TITLE_SUB_RATIO = 0.75,
+                CARD_BODY_RATIO = 0.75;
+            const g = id => document.getElementById(id);
+            const titleSizeInput = g('l5_titleSize'),
+                cardSizeInput = g('l5_cardSize');
+            const overviewSizeInput = g('l5_overviewSize'),
+                overviewLineHeightInput = g('l5_overviewLineHeight');
+            const cardLineHeightInput = g('l5_cardLineHeight'),
+                overviewColorInput = g('l5_overviewColor');
+            const cardBodyColorInput = g('l5_cardBodyColor'),
+                vGapSizeInput = g('l5_vGapSize');
+            const overviewArea = g('l5_overviewArea'),
+                cardContainer = g('l5_cardContainer');
+            const layoutTypeSelect = g('l5_layoutType');
+            const cardData = [
+                { num: '01', title: '设备互联互通', desc: '构建底层工业总线，实现生产设备、传感器的跨协议互联，打通数据孤岛。' },
+                { num: '02', title: '大数据中心', desc: '搭建统一汇聚的数据中台，运用流处理与批处理技术，保障数据实时性与准确性。' },
+                { num: '03', title: '智能决策模型', desc: '基于 AI 算法进行生产排期与故障预警，辅助管理人员进行科学的数据决策。' },
+                { num: '04', title: '数字孪生系统', desc: '构建工厂全息数字模型，实时映射物理空间状态，实现虚实结合的动态监控。' },
+                { num: '05', title: '生产流程优化', desc: '通过数据追溯与瓶颈分析，动态调整工序参数，提升整体产线的运行效率。' },
+                { num: '06', title: '安全运维体系', desc: '提供全栈信息安全防护与设备健康管理，确保物联网络运行的安全与稳定。' }
+            ];
+            window.l5_updateDynamicLayout = function() {
+                const th = document.querySelector('#layout5 .title-bar-wrapper').getBoundingClientRect().height;
+                const oh = overviewArea.getBoundingClientRect().height;
+                const h = SLIDE_HEIGHT - TOP_PAD - th - (GAP * 4) - oh - BOTTOM_PAD;
+                document.querySelector('#layout5 .detail-wrapper').style.height = (h > 150 ? h : 200) + 'px';
+            };
+
+            function applyTitleSizes() {
+                const sz = parseInt(titleSizeInput.value);
+                if (sz < 20) { titleSizeInput.value = 20; return; }
+                document.querySelector('#layout5 .title-bar-wrapper .number').style.fontSize = sz + 'px';
+                document.querySelector('#layout5 .title-bar-wrapper .main-title').style.fontSize = sz + 'px';
+                document.querySelector('#layout5 .title-bar-wrapper .sub-title').style.fontSize = (sz * TITLE_SUB_RATIO) +
+                    'px';
+                if (parseInt(cardSizeInput.value) > sz) { cardSizeInput.value = sz;
+                    applyCardSizes(); }
+                if (parseInt(overviewSizeInput.value) > sz) { overviewSizeInput.value = sz;
+                    applyOverviewSizes(); }
+                setTimeout(window.l5_updateDynamicLayout, 50);
+            }
+
+            function applyOverviewSizes() {
+                const val = parseInt(overviewSizeInput.value),
+                    max = parseInt(titleSizeInput.value);
+                overviewArea.style.fontSize = (val > max ? (overviewSizeInput.value = max, max) : val) + 'px';
+                setTimeout(window.l5_updateDynamicLayout, 50);
+            }
+
+            function applyCardSizes() {
+                const sz = parseInt(cardSizeInput.value),
+                    lim = parseInt(titleSizeInput.value);
+                renderCards(layoutTypeSelect.value, sz > lim ? (cardSizeInput.value = lim, lim) : sz);
+            }
+
+            function renderCards(layoutKey, cardBaseSize) {
+                cardContainer.innerHTML = '';
+                cardContainer.className = 'card-container';
+                cardContainer.style.gridTemplateColumns = '';
+                cardContainer.style.gridTemplateRows = '';
+                cardContainer.style.gap = '20px';
+                cardContainer.style.padding = '10px 0';
+                if (!cardBaseSize) cardBaseSize = parseInt(cardSizeInput.value);
+                const bodySize = Math.floor(cardBaseSize * CARD_BODY_RATIO);
+                const bodyColor = cardBodyColorInput.value;
+                const bodyLH = cardLineHeightInput.value;
+                let count = 0,
+                    headerJustify = 'center';
+                if (layoutKey.startsWith('h-')) {
+                    cardContainer.classList.add('layout-horizontal');
+                    count = parseInt(layoutKey.split('-')[1]);
+                } else if (layoutKey.startsWith('v-')) {
+                    count = parseInt(layoutKey.split('-')[1]);
+                    cardContainer.classList.add('layout-vertical-grid');
+                    cardContainer.style.gridTemplateColumns = '1fr';
+                    cardContainer.style.gridTemplateRows = 'repeat(' + count + ', 1fr)';
+                    cardContainer.style.gap = parseInt(vGapSizeInput.value) + 'px';
+                    headerJustify = 'flex-start';
+                } else if (layoutKey.startsWith('g-')) {
+                    cardContainer.classList.add('layout-grid');
+                    const parts = layoutKey.split('-')[1].split('x');
+                    const rows = parseInt(parts[0]),
+                        cols = parseInt(parts[1]);
+                    count = rows * cols;
+                    cardContainer.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+                    cardContainer.style.gridTemplateRows = 'repeat(' + rows + ', 1fr)';
+                } else {
+                    cardContainer.classList.add('layout-horizontal');
+                    count = 2;
+                }
+                for (let i = 0; i < Math.min(count, cardData.length); i++) {
+                    const d = cardData[i],
+                        div = document.createElement('div');
+                    div.className = 'card-item';
+                    div.innerHTML =
+                        `
+                <div class="card-header" style="font-size:${cardBaseSize}px;justify-content:${headerJustify};">
+                  <span class="c-number" contenteditable="true">${d.num}</span>
+                  <span class="c-title" contenteditable="true">${d.title}</span>
+                </div>
+                <div class="card-body" contenteditable="true" style="font-size:${bodySize}px;color:${bodyColor};line-height:${bodyLH};">${d.desc}</div>`;
+                    cardContainer.appendChild(div);
+                }
+                setTimeout(window.l5_updateDynamicLayout, 50);
+            }
+            titleSizeInput.addEventListener('input', applyTitleSizes);
+            cardSizeInput.addEventListener('input', applyCardSizes);
+            overviewSizeInput.addEventListener('input', applyOverviewSizes);
+            overviewLineHeightInput.addEventListener('input', () => { overviewArea.style.lineHeight =
+                    overviewLineHeightInput.value;
+                setTimeout(window.l5_updateDynamicLayout, 50); });
+            cardLineHeightInput.addEventListener('input', function() {
+                document.querySelectorAll('#layout5 .card-body').forEach(el => el.style.lineHeight = this.value);
+            });
+            vGapSizeInput.addEventListener('input', function() {
+                if (layoutTypeSelect.value.startsWith('v-')) cardContainer.style.gap = this.value + 'px';
+            });
+            overviewArea.addEventListener('mouseup', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed && this.contains(sel.anchorNode))
+                    setTimeout(() => overviewColorInput.click(), 10);
+            });
+            overviewColorInput.addEventListener('input', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed && overviewArea.contains(sel.anchorNode)) {
+                    document.execCommand('foreColor', false, this.value);
+                    sel.removeAllRanges();
+                } else { overviewArea.style.color = this.value; }
+            });
+            document.addEventListener('mouseup', function() {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed) {
+                    let n = sel.anchorNode;
+                    while (n) {
+                        if (n.classList && n.classList.contains('card-body') && n.closest('#layout5')) {
+                            setTimeout(() => cardBodyColorInput.click(), 10);
+                            break;
+                        }
+                        n = n.parentNode;
+                    }
+                }
+            });
+            cardBodyColorInput.addEventListener('input', function() {
+                const sel = window.getSelection();
+                let inCard = false;
+                if (sel.rangeCount > 0 && !sel.isCollapsed) {
+                    let n = sel.anchorNode;
+                    while (n) { if (n.classList && n.classList.contains('card-body')) { inCard = true; break; }
+                        n = n.parentNode; }
+                }
+                if (inCard) { document.execCommand('foreColor', false, this.value);
+                    sel.removeAllRanges(); } else { document.querySelectorAll('#layout5 .card-body')
+                        .forEach(el => el.style.color = this.value); }
+            });
+            layoutTypeSelect.addEventListener('change', applyCardSizes);
+            renderCards('h-2');
+            applyTitleSizes();
+        })();
+
+        // ---- 布局六 ----
+        (function() {
+            const bgUpload = document.getElementById('l6_bgUpload');
+            const bgLayer = document.getElementById('l6_bgLayer');
+            bgUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => { bgLayer.style.backgroundImage = 'url(' + ev.target.result + ')'; };
+                reader.readAsDataURL(file);
+            });
+            document.querySelectorAll('#panel6 .opacity-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#panel6 .opacity-btn').forEach(b => b.classList.remove(
+                    'active'));
+                    this.classList.add('active');
+                    bgLayer.style.opacity = parseFloat(this.getAttribute('data-opacity'));
+                });
+            });
+        })();
+    </script>
+
+</body>
+</html>
