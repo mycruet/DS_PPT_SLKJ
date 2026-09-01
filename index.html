@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!-- ============================================================
+  v4.2 | 2026-09-01 | 修复目录渲染函数名笔误致恢复中断
+  工业物联网 · 七合一工具套件（Supabase 云端版）
+  ============================================================ -->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +10,7 @@
     <title>工业物联网 · 七合一工具套件</title>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         /* ========== 全局重置 & 基础 ========== */
         * {
@@ -4193,6 +4198,47 @@
             }
         }
 
+
+        /* ========== Supabase 信息面板 ========== */
+        .sb-panel {
+            width: 100%;
+            max-width: 1280px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px 22px;
+            background: rgba(18, 28, 44, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 180, 240, 0.35);
+            border-radius: 16px;
+            padding: 10px 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            font-size: 13px;
+            color: #b8d0e4;
+        }
+        .sb-status { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .sb-version {
+            display: inline-flex; align-items: center;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+            color: #7de3ff;
+            background: rgba(0, 180, 240, 0.12);
+            border: 1px solid rgba(0, 180, 240, 0.45);
+            cursor: default; user-select: none;
+        }
+        .sb-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #ff5a5a; box-shadow: 0 0 10px rgba(255, 90, 90, 0.7);
+            transition: all 0.3s ease;
+        }
+        .sb-dot.connected { background: #2ee6a0; box-shadow: 0 0 12px rgba(46, 230, 160, 0.8); }
+        .sb-dot.saving { background: #ffc24a; box-shadow: 0 0 12px rgba(255, 194, 74, 0.8); animation: sbPulse 0.8s ease-in-out infinite; }
+        @keyframes sbPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .sb-meta { display: flex; align-items: center; gap: 6px; color: #8ab0d0; }
+        .sb-meta strong { color: #d0e8f8; font-weight: 600; }
+        .sb-meta { margin-left: auto; }
     </style>
 </head>
 <body>
@@ -4212,6 +4258,16 @@
     </div>
 
     <!-- ===== TAB 导航 ===== -->
+    <!-- Supabase 信息面板 -->
+    <div class="sb-panel">
+        <div class="sb-status">
+            <span class="sb-dot" id="sbDot"></span>
+            <span id="sbStatusText">连接中...</span>
+        </div>
+        <div class="sb-version" id="sbVersion" title="应用版本 v4.6 · 构建 2026-09-01">v4.6</div>
+        <div class="sb-meta"><span>数据容量：</span><strong id="sbCapacity">--</strong></div>
+        <div class="sb-meta"><span>最后保存：</span><strong id="sbLastSave">尚未保存</strong></div>
+    </div>
     <div class="app-tabs" id="appTabs">
         <button class="tab-btn active" data-tab="chapter">📚 章节管理 <span class="badge" id="chapterBadge">1</span></button>
         <button class="tab-btn" data-tab="content">✏️ 内容编辑 <span class="badge" id="contentBadge">1</span></button>
@@ -4985,8 +5041,15 @@
                     setOpacity(currentOpacity);
                     adjustOverlayForOpacity(currentOpacity);
                     fileNameIndicator.textContent = file.name;
+                    showToast('背景图已上传');
+                    window.sbUploadImage(file).then(function(dataUrl) {
+                        currentBgObjectUrl = dataUrl;
+                        customBgLayer.style.backgroundImage = `url('${dataUrl}')`;
+                        window.sbForceSave();
+                    }).catch(function() { showToast('背景图云端保存失败', true); });
                 };
-                img.onerror = function() { showToast('图片加载失败，请尝试其他图片', true);
+                img.onerror = function() {
+                    showToast('图片加载失败，请尝试其他图片', true);
                     URL.revokeObjectURL(objectUrl);
                     currentBgObjectUrl = null; };
                 img.src = objectUrl;
@@ -4997,6 +5060,7 @@
                 customBgLayer.style.backgroundImage = '';
                 pptCover.classList.remove('has-custom-bg');
                 fileNameIndicator.textContent = '';
+                if (currentBgObjectUrl && /^https?:/.test(currentBgObjectUrl)) window.sbDeleteImage(currentBgObjectUrl);
                 if (currentBgObjectUrl) { URL.revokeObjectURL(currentBgObjectUrl);
                     currentBgObjectUrl = null; }
                 bgFileInput.value = '';
@@ -5100,13 +5164,22 @@
                     });
                 },
                 restoreIndex: function(i) { currentChapterIndex = i; renderChapter(i); updatePageIndicator(); },
-                getData: function() { saveCurrentChapter(); return { chapters: JSON.parse(JSON.stringify(chapters)), opacity: currentOpacity, offset: currentOffset }; },
+                getData: function() { saveCurrentChapter(); return { chapters: JSON.parse(JSON.stringify(chapters)), opacity: currentOpacity, offset: currentOffset,
+                    customBgUrl: (currentBgObjectUrl && /^(https?:|data:)/.test(currentBgObjectUrl)) ? currentBgObjectUrl : null }; },
                 setData: function(d) {
                     if (!d || !d.chapters) return;
                     chapters = d.chapters;
                     currentChapterIndex = 0;
                     if (d.opacity !== undefined) setOpacity(d.opacity);
                     if (d.offset !== undefined) setOffset(d.offset);
+                    if (d.customBgUrl && /^(https?:|data:)/.test(d.customBgUrl)) {
+                        currentBgObjectUrl = d.customBgUrl;
+                        customBgLayer.style.backgroundImage = "url('" + d.customBgUrl + "')";
+                        customBgLayer.classList.add('active');
+                        pptCover.classList.add('has-custom-bg');
+                        if (fileNameIndicator) fileNameIndicator.textContent = '云端背景图';
+                        adjustOverlayForOpacity(currentOpacity);
+                    }
                     renderChapter(0); updateBadge();
                 }
             };
@@ -5611,19 +5684,19 @@
             // ---- 图片上传 ----
             function applyImage(file) {
                 if (!file || !file.type.startsWith('image/')) { showToast('请选择有效的图片文件', true); return; }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const dataUrl = e.target.result;
-                    if (pages.length > 0) { pages[currentPageIndex].imageDataUrl = dataUrl;
-                        renderPage(currentPageIndex);
-                        showToast('图片已上传'); }
-                };
-                reader.onerror = function() { showToast('图片读取失败', true); };
-                reader.readAsDataURL(file);
+                if (pages.length === 0) return;
+                showToast('⏳ 正在上传图片...', false);
+                window.sbUploadImage(file).then(function(dataUrl) {
+                    pages[currentPageIndex].imageDataUrl = dataUrl;
+                    renderPage(currentPageIndex);
+                    showToast('图片已上传');
+                    window.sbForceSave();
+                }).catch(function() { showToast('图片上传失败', true); });
             }
 
             function removeImage() {
-                if (pages.length > 0) { pages[currentPageIndex].imageDataUrl = null;
+                if (pages.length > 0) { if (pages[currentPageIndex].imageDataUrl) window.sbDeleteImage(pages[currentPageIndex].imageDataUrl);
+                    pages[currentPageIndex].imageDataUrl = null;
                     renderPage(currentPageIndex);
                     bgFileInput.value = '';
                     showToast('图片已清除'); }
@@ -5987,19 +6060,19 @@
             // ---- 图片上传 ----
             function applyImage(file) {
                 if (!file || !file.type.startsWith('image/')) { showToast('请选择有效的图片文件', true); return; }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const dataUrl = e.target.result;
-                    if (pages.length > 0) { pages[currentPageIndex].imageDataUrl = dataUrl;
-                        renderPage(currentPageIndex);
-                        showToast('图片已上传'); }
-                };
-                reader.onerror = function() { showToast('图片读取失败', true); };
-                reader.readAsDataURL(file);
+                if (pages.length === 0) return;
+                showToast('⏳ 正在上传图片...', false);
+                window.sbUploadImage(file).then(function(dataUrl) {
+                    pages[currentPageIndex].imageDataUrl = dataUrl;
+                    renderPage(currentPageIndex);
+                    showToast('图片已上传');
+                    window.sbForceSave();
+                }).catch(function() { showToast('图片上传失败', true); });
             }
 
             function removeImage() {
-                if (pages.length > 0) { pages[currentPageIndex].imageDataUrl = null;
+                if (pages.length > 0) { if (pages[currentPageIndex].imageDataUrl) window.sbDeleteImage(pages[currentPageIndex].imageDataUrl);
+                    pages[currentPageIndex].imageDataUrl = null;
                     renderPage(currentPageIndex);
                     bgFileInput.value = '';
                     showToast('图片已清除'); }
@@ -6490,8 +6563,14 @@
                     container.classList.add('has-image');
                     equalizeExplanationHeights();
                     updateImgSizeDisplay();
-                    showToast('图片已上传');
-                    saveCurrentPage();
+                    showToast('⏳ 正在上传图片...', false);
+                    window.sbUploadImage(file).then(function(dataUrl) {
+                        imgEl.src = dataUrl;
+                        imgObjectUrls[index] = dataUrl;
+                        saveCurrentPage();
+                        showToast('图片已上传');
+                        window.sbForceSave();
+                    }).catch(function() { showToast('图片上传失败', true); });
                 };
                 img.onerror = () => { showToast('图片加载失败', true);
                     URL.revokeObjectURL(objectUrl);
@@ -6506,6 +6585,7 @@
                     imgEl.src = '';
                     imgEl.style.display = 'none';
                     container.classList.remove('has-image');
+                    if (imgEl.src && /^https?:/.test(imgEl.src)) window.sbDeleteImage(imgEl.src);
                     if (imgObjectUrls[index]) { URL.revokeObjectURL(imgObjectUrls[index]);
                         delete imgObjectUrls[index]; }
                 });
@@ -7003,19 +7083,19 @@
             // ---- 图片上传 ----
             function applyImage(file) {
                 if (!file || !file.type.startsWith('image/')) { showToast('请选择有效的图片文件', true); return; }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const dataUrl = e.target.result;
-                    if (pages.length > 0) { pages[currentPageIndex].imageDataUrl = dataUrl;
-                        renderPage(currentPageIndex);
-                        showToast('图片已上传'); }
-                };
-                reader.onerror = function() { showToast('图片读取失败', true); };
-                reader.readAsDataURL(file);
+                if (pages.length === 0) return;
+                showToast('⏳ 正在上传图片...', false);
+                window.sbUploadImage(file).then(function(dataUrl) {
+                    pages[currentPageIndex].imageDataUrl = dataUrl;
+                    renderPage(currentPageIndex);
+                    showToast('图片已上传');
+                    window.sbForceSave();
+                }).catch(function() { showToast('图片上传失败', true); });
             }
 
             function removeImage() {
-                if (pages.length > 0) { pages[currentPageIndex].imageDataUrl = null;
+                if (pages.length > 0) { if (pages[currentPageIndex].imageDataUrl) window.sbDeleteImage(pages[currentPageIndex].imageDataUrl);
+                    pages[currentPageIndex].imageDataUrl = null;
                     renderPage(currentPageIndex);
                     bgFileInput.value = '';
                     showToast('图片已清除'); }
@@ -7430,6 +7510,11 @@
                     setOpacity(currentOpacity);
                     adjustOverlayForOpacity(currentOpacity);
                     showToast(`${target === 'cover' ? '封面' : target === 'toc' ? '目录' : '结束页'}背景图已上传`);
+                    window.sbUploadImage(file).then(function(dataUrl) {
+                        info.setUrl(dataUrl);
+                        info.layer.style.backgroundImage = `url('${dataUrl}')`;
+                        window.sbForceSave();
+                    }).catch(function() { showToast('背景图云端保存失败', true); });
                 };
                 img.onerror = function() {
                     alert('图片加载失败，请尝试其他图片。');
@@ -7449,6 +7534,8 @@
                 };
                 const info = layerMap[target];
                 if (!info) return;
+                var _curBgUrl = info.urlVar();
+                if (_curBgUrl && /^https?:/.test(_curBgUrl)) window.sbDeleteImage(_curBgUrl);
                 if (info.urlVar()) {
                     URL.revokeObjectURL(info.urlVar());
                     info.setUrl(null);
@@ -7718,7 +7805,12 @@
                         cover: { mainTitle: txt('#slideCover .main-title'), subtitle: txt('#slideCover .subtitle'), featureTags: txts('#slideCover .feature-tag') },
                         toc: { title: txt('.toc-title'), items: tocItemsData, count: currentCount },
                         ending: { mainTitle: txt('#slideEnding .main-title'), subtitle: txt('#slideEnding .subtitle'), contactItems: txts('.contact-item'), footerTags: txts('.footer-tag') },
-                        opacity: currentOpacity
+                        opacity: currentOpacity,
+                        backgrounds: {
+                            cover: (coverBgUrl && /^(https?:|data:)/.test(coverBgUrl)) ? coverBgUrl : null,
+                            toc: (tocBgUrl && /^(https?:|data:)/.test(tocBgUrl)) ? tocBgUrl : null,
+                            ending: (endingBgUrl && /^(https?:|data:)/.test(endingBgUrl)) ? endingBgUrl : null
+                        }
                     };
                 },
                 setData: function(d) {
@@ -7726,9 +7818,35 @@
                     function set(sel, val) { var el=_root.querySelector(sel); if(el) el.textContent=val; }
                     function setAll(sel, arr) { var els=_root.querySelectorAll(sel); els.forEach(function(el,i){ if(arr[i]!==undefined) el.textContent=arr[i]; }); }
                     if (d.cover) { set('#slideCover .main-title', d.cover.mainTitle||''); set('#slideCover .subtitle', d.cover.subtitle||''); if(d.cover.featureTags) setAll('#slideCover .feature-tag', d.cover.featureTags); }
-                    if (d.toc) { set('.toc-title', d.toc.title||''); if(d.toc.count) { currentCount=d.toc.count; var opt=_root.querySelector('.count-option[data-count="'+d.toc.count+'"]'); if(opt){_root.querySelectorAll('.count-option').forEach(function(o){o.classList.remove('active');}); opt.classList.add('active');} renderTocItems(); } if(d.toc.items && d.toc.items.length) { var tocEls=_root.querySelectorAll('#tocItems .toc-item'); d.toc.items.forEach(function(item,i){ if(tocEls[i]){ var n=tocEls[i].querySelector('.toc-number'); var t=tocEls[i].querySelector('.toc-item-title'); if(n) n.textContent=item.number||''; if(t) t.textContent=item.title||''; } }); } }
+                    if (d.toc) { set('.toc-title', d.toc.title||''); if(d.toc.count) { currentCount=d.toc.count; var opt=_root.querySelector('.count-option[data-count="'+d.toc.count+'"]'); if(opt){_root.querySelectorAll('.count-option').forEach(function(o){o.classList.remove('active');}); opt.classList.add('active');} renderItems(currentCount); } if(d.toc.items && d.toc.items.length) { var tocEls=_root.querySelectorAll('#tocItems .toc-item'); d.toc.items.forEach(function(item,i){ if(tocEls[i]){ var n=tocEls[i].querySelector('.toc-number'); var t=tocEls[i].querySelector('.toc-item-title'); if(n) n.textContent=item.number||''; if(t) t.textContent=item.title||''; } }); } }
                     if (d.ending) { set('#slideEnding .main-title', d.ending.mainTitle||''); set('#slideEnding .subtitle', d.ending.subtitle||''); if(d.ending.contactItems) setAll('.contact-item', d.ending.contactItems); if(d.ending.footerTags) setAll('.footer-tag', d.ending.footerTags); }
-                    if (d.opacity !== undefined) { currentOpacity = d.opacity; var opOpt=_root.querySelector('.opacity-option[data-opacity="'+d.opacity+'"]'); if(opOpt){_root.querySelectorAll('.opacity-option').forEach(function(o){o.classList.remove('active');}); opOpt.classList.add('active'); applyOpacity(); } }
+                    if (d.opacity !== undefined) { currentOpacity = d.opacity; var opOpt=_root.querySelector('.opacity-option[data-opacity="'+d.opacity+'"]'); if(opOpt){_root.querySelectorAll('.opacity-option').forEach(function(o){o.classList.remove('active');}); opOpt.classList.add('active'); setOpacity(currentOpacity); } }
+                    if (d.backgrounds) {
+                        var bgMap = {
+                            cover:  { layer: coverBgLayer,  set: function(u){ coverBgUrl = u; },  name: coverFileName,  cls: 'has-cover-bg' },
+                            toc:    { layer: tocBgLayer,    set: function(u){ tocBgUrl = u; },    name: tocFileName,    cls: 'has-toc-bg' },
+                            ending: { layer: endingBgLayer, set: function(u){ endingBgUrl = u; }, name: endingFileName, cls: 'has-ending-bg' }
+                        };
+                        var anyBgActive = false;
+                        Object.keys(bgMap).forEach(function(k) {
+                            var info = bgMap[k], url = d.backgrounds[k];
+                            if (url && /^(https?:|data:)/.test(url)) {
+                                info.set(url);
+                                info.layer.style.backgroundImage = "url('" + url + "')";
+                                info.layer.classList.add('active');
+                                if (info.name) info.name.textContent = '云端背景图';
+                                pptCover.classList.add(info.cls);
+                                anyBgActive = true;
+                            } else {
+                                info.set(null);
+                                info.layer.classList.remove('active');
+                                info.layer.style.backgroundImage = '';
+                                if (info.name) info.name.textContent = '';
+                                pptCover.classList.remove(info.cls);
+                            }
+                        });
+                        if (anyBgActive) { setOpacity(currentOpacity); adjustOverlayForOpacity(currentOpacity); }
+                    }
                 }
             };
 
@@ -8206,6 +8324,8 @@
                     });
                     localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(order));
                 } catch(e) { console.warn('保存排序失败', e); }
+                // 排序面板不在 MutationObserver 观察范围内，需显式触发云端自动保存（2秒防抖；isRestoring 时自动跳过）
+                if (window.sbScheduleSave) { try { window.sbScheduleSave(); } catch(e) {} }
             }
 
             function restoreOrderFromStorage() {
@@ -8501,6 +8621,272 @@
             });
             closeBtn.addEventListener('click', function() { sortOverlay.classList.remove('open'); });
             sortOverlay.addEventListener('click', function(e) { if (e.target===sortOverlay) sortOverlay.classList.remove('open'); });
+        })();
+
+        // =============================================================
+        // Supabase 集成层：数据持久化 + 图片上传 + 信息面板
+        // =============================================================
+        (function sbIntegration() {
+            const SB_URL = 'https://backend.miaoda.online/projects/supabase352882754918068224';
+            const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoyMTAzNTYxMDA1LCJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIiwic3ViIjoiYW5vbiJ9.CPE5pHwTV2t-NANkfZfH3GJy4bCBA5ahbB9HTh-TaYU';
+            const BUCKET = 'ppt-images';
+            // 应用版本信息
+            var APP_VERSION = 'v4.6';
+            var APP_BUILD_DATE = '2026-09-01';
+            var APP_VERSION_DESC = '背景图持久化修复版';
+            window.APP_VERSION = APP_VERSION;
+            console.log('%c 七合一工具套件 v4.6 ', 'background:#00b4f0;color:#04101f;font-weight:bold;border-radius:3px;padding:2px 6px;', '构建 2026-09-01 · 背景图持久化修复版');
+
+            // 重置/删除图片时同步清理云端：删除 Storage 对象与 ppt_images 记录（仅对云端 https URL 生效，blob:/data: 忽略）
+            window.sbDeleteImage = function(url) {
+                if (!supabase || !connected || !url) return;
+                if (!/^https?:/.test(url)) return;
+                try {
+                    var path = null;
+                    var idx = url.indexOf('/object/public/ppt-images/');
+                    if (idx !== -1) { path = url.substring(idx + '/object/public/ppt-images/'.length); }
+                    else { var p2 = url.split('ppt-images/'); if (p2.length > 1) path = p2[p2.length - 1]; }
+                    if (path) {
+                        supabase.storage.from(BUCKET).remove([path]).then(function(){}, function(e){ console.warn('删除Storage图片失败', e); });
+                        fetch(SB_URL + '/rest/v1/ppt_images?url=eq.' + encodeURIComponent(url), { method: 'DELETE', headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON } }).catch(function(e){ console.warn('删除图片记录失败', e); });
+                    }
+                } catch(e) { console.warn('sbDeleteImage 异常', e); }
+            };
+            let supabase = null;
+            let connected = false;
+            let saveTimer = null;
+            let isSaving = false;
+            let isRestoring = false;
+
+            const dot = document.getElementById('sbDot');
+            const statusText = document.getElementById('sbStatusText');
+            const capacityEl = document.getElementById('sbCapacity');
+            const lastSaveEl = document.getElementById('sbLastSave');
+            let retryTimer = null; // 自动保存失败后的自动重试定时器
+
+            function setStatus(state, text) {
+                dot.classList.remove('connected', 'saving');
+                if (state === 'connected') dot.classList.add('connected');
+                if (state === 'saving') dot.classList.add('saving');
+                statusText.textContent = text;
+            }
+
+            function formatTime(d) {
+                const p = n => String(n).padStart(2, '0');
+                return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+            }
+
+            function formatSize(bytes) {
+                if (!bytes || bytes < 1024) return (bytes||0) + ' B';
+                if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+                return (bytes/(1024*1024)).toFixed(2) + ' MB';
+            }
+
+            function collectAllData() {
+                const apps = ['chapterApp','contentApp','imagePageApp','singlePageApp','multiGroupApp','entryPageApp','ppt3App'];
+                const data = {};
+                apps.forEach(function(name) {
+                    const app = window[name];
+                    if (app && typeof app.getData === 'function') {
+                        try { data[name] = app.getData(); } catch(e) { console.warn('getData error', name, e); }
+                    }
+                });
+                // 同步携带排序面板的幻灯片顺序，使云端持久化排序信息
+                if (window.sortPanelApp && typeof window.sortPanelApp.getOrder === 'function') {
+                    try { data.slideOrder = window.sortPanelApp.getOrder(); } catch(e) { console.warn('getOrder error', e); }
+                }
+                return data;
+            }
+
+            window.sbUploadImage = function(file) {
+                return new Promise(function(resolve, reject) {
+                    if (!supabase || !connected) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) { resolve(e.target.result); };
+                        reader.onerror = function() { reject(new Error('读取失败')); };
+                        reader.readAsDataURL(file);
+                        return;
+                    }
+                    const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+                    const path = `uploads/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+                    supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type || 'image/png', upsert: true })
+                        .then(function(res) {
+                            if (res.error) { console.error('上传失败', res.error); reject(res.error); return; }
+                            const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+                            supabase.from('ppt_images').insert({ storage_path: path, url: pub.publicUrl, file_size: file.size || 0 }).then(function() {
+                                refreshCapacity();
+                            });
+                            resolve(pub.publicUrl);
+                        })
+                        .catch(function(err) { console.error('上传异常', err); reject(err); });
+                });
+            };
+
+            let lastSavedJson = null;
+
+            function saveAll(force) {
+                if (!supabase || !connected) { setStatus('disconnected', '未连接'); return; }
+                if (isSaving) return;
+                const data = collectAllData();
+                const dataJson = JSON.stringify(data);
+                // 数据与上次成功保存完全一致时跳过，彻底阻断任何自触发循环
+                if (!force && dataJson === lastSavedJson) return;
+                isSaving = true;
+                setStatus('saving', '正在保存...');
+                const payload = { content: data };
+                supabase.from('ppt_slides')
+                    .select('id')
+                    .eq('module_type', 'all')
+                    .limit(1)
+                    .then(function(res) {
+                        const rows = res.data || [];
+                        if (rows.length > 0) {
+                            return supabase.from('ppt_slides').update({ content: payload, updated_at: new Date().toISOString() }).eq('id', rows[0].id).then(function() { return rows[0].id; });
+                        } else {
+                            return supabase.from('ppt_slides').insert({ module_type: 'all', content: payload, sort_order: 0 }).select('id').single().then(function(r) { return r.data.id; });
+                        }
+                    })
+                    .then(function() {
+                        isSaving = false;
+                        if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+                        lastSavedJson = dataJson;
+                        lastSaveEl.textContent = formatTime(new Date());
+                        setStatus('connected', '已连接');
+                    })
+                    .catch(function(err) {
+                        console.error('保存失败', err);
+                        isSaving = false;
+                        setStatus('connected', '已连接 · 保存失败，自动重试中');
+                        showToast('自动保存失败，系统将自动重试', true);
+                        // 保存失败后 5 秒自动重试，无需任何手动操作
+                        if (retryTimer) clearTimeout(retryTimer);
+                        retryTimer = setTimeout(function() { retryTimer = null; saveAll(true); }, 5000);
+                    });
+            }
+
+            window.sbScheduleSave = function() {
+                if (isRestoring) return;
+                if (saveTimer) clearTimeout(saveTimer);
+                saveTimer = setTimeout(saveAll, 2000);
+            };
+
+            // 图片上传后立即强制保存（绕过防抖与数据相等判断），确保图片 URL 被持久化
+            window.sbForceSave = function() {
+                if (isRestoring) return;
+                if (saveTimer) clearTimeout(saveTimer);
+                if (isSaving) {
+                    // 正在保存中，稍后重试一次，确保图片 URL 不丢失
+                    saveTimer = setTimeout(function() { saveAll(true); }, 1500);
+                    return;
+                }
+                saveAll(true);
+            };
+
+            function restoreAllData() {
+                if (!supabase || !connected) return;
+                isRestoring = true;
+                supabase.from('ppt_slides')
+                    .select('*')
+                    .eq('module_type', 'all')
+                    .order('updated_at', { ascending: false })
+                    .limit(1)
+                    .then(function(res) {
+                        const rows = res.data || [];
+                        if (rows.length > 0 && rows[0].content) {
+                            const data = rows[0].content.content || rows[0].content;
+                            const apps = ['chapterApp','contentApp','imagePageApp','singlePageApp','multiGroupApp','entryPageApp','ppt3App'];
+                            apps.forEach(function(name) {
+                                if (data[name] && window[name] && typeof window[name].setData === 'function') {
+                                    try { window[name].setData(data[name]); } catch(e) { console.warn('setData error', name, e); }
+                                }
+                            });
+                            // 恢复排序：需在各模块 setData 之后执行，让 getSlides 能拿到最新数据
+                            if (data.slideOrder && Array.isArray(data.slideOrder) && data.slideOrder.length > 0
+                                && window.sortPanelApp && typeof window.sortPanelApp.setOrder === 'function') {
+                                setTimeout(function() {
+                                    try { window.sortPanelApp.setOrder(data.slideOrder); } catch(e) { console.warn('setOrder error', e); }
+                                }, 100);
+                            }
+                            showToast('已从云端恢复数据');
+                        }
+                        // 恢复数据引发的 DOM 变化不应立刻触发一次保存
+                        lastSavedJson = JSON.stringify(collectAllData());
+                        setTimeout(function() { isRestoring = false; }, 500);
+                    })
+                    .catch(function(err) {
+                        console.error('恢复数据失败', err);
+                        setTimeout(function() { isRestoring = false; }, 500);
+                        showToast('数据加载失败', true);
+                    });
+            }
+
+            function refreshCapacity() {
+                if (!supabase || !connected) { capacityEl.textContent = '--'; return; }
+                supabase.from('ppt_images')
+                    .select('file_size')
+                    .then(function(res) {
+                        const rows = res.data || [];
+                        let total = 0;
+                        rows.forEach(function(r) { total += (r.file_size || 0); });
+                        capacityEl.textContent = formatSize(total);
+                    })
+                    .catch(function() { capacityEl.textContent = '容量查询失败'; });
+            }
+
+            const observer = new MutationObserver(function() {
+                window.sbScheduleSave();
+            });
+            // 仅观察 7 个模块容器内部的 DOM 变化；信息面板与 toast 位于容器之外，
+            // 其变化不会触发保存，避免「保存→更新状态文字→再保存」的自我触发死循环
+            ['app-chapter','app-content','app-imagepage','app-singlepage','app-multigroup','app-entrypage','app-ppt3'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) observer.observe(el, { subtree: true, childList: true, characterData: true });
+            });
+
+            // 关闭页面/切换标签时，若有待保存的防抖任务，立即落库，避免最后 2 秒内的编辑丢失
+            function flushPendingSave() {
+                if (saveTimer && !isRestoring && connected) {
+                    clearTimeout(saveTimer);
+                    try { saveAll(true); } catch(e) { console.warn('关页保存失败', e); }
+                }
+            }
+            window.addEventListener('beforeunload', flushPendingSave);
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden') flushPendingSave();
+            });
+
+            function init() {
+                try {
+                    if (window.supabase && window.supabase.createClient) {
+                        supabase = window.supabase.createClient(SB_URL, SB_ANON);
+                    }
+                } catch(e) {
+                    console.error('Supabase 初始化失败', e);
+                }
+                if (!supabase) {
+                    setStatus('disconnected', '未连接');
+                    capacityEl.textContent = '--';
+                    return;
+                }
+                supabase.from('ppt_slides').select('id').limit(1)
+                    .then(function(res) {
+                        if (res.error) {
+                            console.error('连接测试失败', res.error);
+                            setStatus('disconnected', '未连接');
+                            return;
+                        }
+                        connected = true;
+                        setStatus('connected', '已连接');
+                        refreshCapacity();
+                        setTimeout(restoreAllData, 500);
+                    })
+                    .catch(function(err) {
+                        console.error('连接异常', err);
+                        setStatus('disconnected', '未连接');
+                    });
+            }
+
+            init();
         })();
 
     </script>
